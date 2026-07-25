@@ -7,6 +7,7 @@ import '../../services/chat_service.dart';
 import '../channels/channel_chat_screen.dart';
 import '../channels/channels_tab.dart';
 import '../chat/chat_screen.dart';
+import '../chat/new_chat_screen.dart';
 import '../widgets/chakra.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/mesh_status_pill.dart';
@@ -89,6 +90,15 @@ class _HomeScreenState extends State<HomeScreen> {
           const MeshTab(),
         ],
       ),
+      floatingActionButton: _tab == 0
+          ? FloatingActionButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const NewChatScreen()),
+              ),
+              tooltip: 'New chat',
+              child: const Icon(Icons.chat_outlined),
+            )
+          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (int i) => setState(() => _tab = i),

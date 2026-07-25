@@ -21,10 +21,15 @@ class ChatsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final ChatService service = context.watch<ChatService>();
 
-    final List<Contact> withChats = service.contacts
-        .where((Contact c) => service.latestWith(c.appId) != null)
-        .toList()
-      ..sort(
+    final List<Contact> withChats = <Contact>[
+      // The "Message yourself" conversation shows up once it has any notes.
+      if (service.latestWith(service.identity.appId) != null)
+        service.selfContact,
+      ...service.contacts.where(
+        (Contact c) =>
+            !service.isSelf(c.appId) && service.latestWith(c.appId) != null,
+      ),
+    ]..sort(
         (Contact a, Contact b) => service
             .latestWith(b.appId)!
             .timestamp
@@ -58,15 +63,25 @@ class ChatsTab extends StatelessWidget {
             itemBuilder: (BuildContext context, int i) {
               final Contact c = withChats[i];
               final Message last = service.latestWith(c.appId)!;
+              final bool self = service.isSelf(c.appId);
               return ListTile(
                 onTap: () => onOpenChat(c),
-                leading: Avatar(
-                  initials: c.initials,
-                  seed: c.appId,
-                  online: service.isOnline(c.appId),
-                ),
+                leading: self
+                    ? CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        child: const Icon(
+                          Icons.bookmark_outline,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Avatar(
+                        initials: c.initials,
+                        seed: c.appId,
+                        online: service.isOnline(c.appId),
+                      ),
                 title: Text(
-                  c.name,
+                  self ? '${c.name} (You)' : c.name,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 subtitle: Row(

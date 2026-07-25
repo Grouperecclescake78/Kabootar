@@ -73,7 +73,11 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final ChatService service = context.watch<ChatService>();
-    final bool online = service.isOnline(widget.peer.appId);
+    final bool self = service.isSelf(widget.peer.appId);
+    final bool online = !self && service.isOnline(widget.peer.appId);
+    final String subtitle = self
+        ? 'Message yourself · saved on this device'
+        : (online ? 'In range now' : 'Not in range');
 
     return Scaffold(
       appBar: AppBar(
@@ -81,26 +85,37 @@ class _ChatScreenState extends State<ChatScreen> {
         bottom: const TricolorLine(),
         title: Row(
           children: <Widget>[
-            Avatar(
-              initials: widget.peer.initials,
-              seed: widget.peer.appId,
-              online: online,
-              radius: 19,
-            ),
+            if (self)
+              CircleAvatar(
+                radius: 19,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: const Icon(
+                  Icons.bookmark_outline,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              )
+            else
+              Avatar(
+                initials: widget.peer.initials,
+                seed: widget.peer.appId,
+                online: online,
+                radius: 19,
+              ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text(
-                  widget.peer.name,
+                  self ? '${widget.peer.name} (You)' : widget.peer.name,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
-                  online ? 'In range now' : 'Not in range',
+                  subtitle,
                   style: TextStyle(
                     fontSize: 12,
                     color: online
@@ -118,15 +133,19 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: <Widget>[
           const DidYouKnowStrip(),
-          if (!online) const _OfflineBanner(),
+          if (!online && !self) const _OfflineBanner(),
           Expanded(
             child: _messages.isEmpty
-                ? const EmptyState(
-                    icon: Icons.waving_hand_outlined,
-                    title: 'Say hello',
-                    message:
-                        'Messages are delivered whenever this person comes '
-                        'into range - even if they are offline right now.',
+                ? EmptyState(
+                    icon: self
+                        ? Icons.bookmark_outline
+                        : Icons.waving_hand_outlined,
+                    title: self ? 'Notes to self' : 'Say hello',
+                    message: self
+                        ? 'Jot down notes, links and reminders. These stay on '
+                            'this device and are never sent over the mesh.'
+                        : 'Messages are delivered whenever this person comes '
+                            'into range - even if they are offline right now.',
                   )
                 : ListView.builder(
                     controller: _scroll,

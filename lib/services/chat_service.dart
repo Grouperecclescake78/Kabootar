@@ -92,6 +92,16 @@ class ChatService extends ChangeNotifier
 
   bool isOnline(String appId) => _deviceToApp.values.contains(appId);
 
+  /// Whether an id refers to this device (the "Message yourself" conversation).
+  bool isSelf(String appId) => appId == identity.appId;
+
+  /// A synthetic contact representing yourself, for the self-notes chat.
+  Contact get selfContact => Contact(
+        appId: identity.appId,
+        name: identity.name.trim().isEmpty ? 'You' : identity.name,
+        lastSeen: _nowMs(),
+      );
+
   /// Display name for a message sender in a channel: the contact's name if we
   /// know them, our own 'You', or a short id fallback.
   String senderLabel(String appId) {
@@ -203,6 +213,22 @@ class ChatService extends ChangeNotifier
   /// persist a row with the same id so an incoming ack can flip it to
   /// delivered.
   Future<Message> send({required String toId, required String body}) async {
+    // "Message yourself" is a purely local note: never floods the mesh.
+    if (toId == identity.appId) {
+      final Message note = Message(
+        id: _uuid.v4(),
+        peerId: identity.appId,
+        body: body,
+        direction: MessageDirection.outgoing,
+        status: MessageStatus.sent,
+        timestamp: _nowMs(),
+      );
+      await _messages.upsert(note);
+      _latestPerPeer[identity.appId] = note;
+      notifyListeners();
+      return note;
+    }
+
     final Envelope envelope = await _engine.sendMessage(toId: toId, body: body);
     final Message message = Message(
       id: envelope.id,
