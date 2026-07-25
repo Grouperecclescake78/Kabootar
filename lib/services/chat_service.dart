@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/crypto/app_keys.dart';
+import '../core/crypto/message_cipher.dart';
 import '../core/identity/identity.dart';
 import '../core/media/media_codec.dart';
 import '../core/mesh/envelope.dart';
@@ -71,6 +72,22 @@ class ChatService extends ChangeNotifier
       newId: _uuid.v4,
       config: config,
     );
+    _cipher = MessageCipher(
+      keys: _keys,
+      myId: identity.appId,
+      ttl: config.ttl,
+      peerKeyOf: (String id) => _peerKeys[id],
+      groupKeyOf: _groupKeyOf,
+      isGroup: _engine.groupIds.contains,
+    );
+  }
+
+  /// A private group's symmetric key for [id], or null (open channel / 1:1).
+  String? _groupKeyOf(String id) {
+    final Channel? c = channelById(id);
+    return (c != null && c.isPrivate && c.groupKey.isNotEmpty)
+        ? c.groupKey
+        : null;
   }
 
   Identity identity;
@@ -105,6 +122,7 @@ class ChatService extends ChangeNotifier
   late final ConvMetaRepository _convMeta;
   late final SqliteSeenStore _seen;
   late final MeshEngine _engine;
+  late final MessageCipher _cipher;
 
   /// Where downloaded media files are written (lazy, cached).
   Directory? _mediaDir;
@@ -620,50 +638,16 @@ class ChatService extends ChangeNotifier
   /// (and it is a real peer, not a channel or self), the body is sealed to
   /// their X25519 key and signed with our Ed25519 key; otherwise it goes as
   /// plaintext, exactly as before encryption existed.
+  /// Build a 1:1 outgoing envelope (encrypted + signed when we hold the peer's
+  /// keys, plaintext otherwise). Delegates to [MessageCipher].
   Future<Envelope> _buildOutgoing({
     required String id,
     required String toId,
     required String plaintext,
     required int ts,
-  }) async {
-    final AppKeys? keys = _keys;
-    final PeerKeys? peer = _peerKeys[toId];
-    final bool encryptable = keys != null &&
-        peer != null &&
-        toId != identity.appId &&
-        !_engine.groupIds.contains(toId);
-    if (encryptable) {
-      final String blob = await keys.seal(peer.agree, utf8.encode(plaintext));
-      final String sig = await keys.signB64(
-        _signedBytes(
-            id: id, from: identity.appId, to: toId, ts: ts, body: blob),
-      );
-      return Envelope(
-        id: id,
-        kind: EnvelopeKind.msg,
-        fromId: identity.appId,
-        toId: toId,
-        body: blob,
-        ts: ts,
-        ttl: _config.ttl,
-        enc: true,
-        sig: sig,
-      );
-    }
-    return Envelope(
-      id: id,
-      kind: EnvelopeKind.msg,
-      fromId: identity.appId,
-      toId: toId,
-      body: plaintext,
-      ts: ts,
-      ttl: _config.ttl,
-    );
-  }
+  }) =>
+      _cipher.buildOutgoing(id: id, toId: toId, plaintext: plaintext, ts: ts);
 
-  /// Canonical bytes an encrypted message's signature covers: the immutable
-  /// routing fields plus the ciphertext. TTL is excluded because relays change
-  /// it. Binding the ids and ciphertext stops tampering and impersonation.
   List<int> _signedBytes({
     required String id,
     required String from,
@@ -671,7 +655,7 @@ class ChatService extends ChangeNotifier
     required int ts,
     required String body,
   }) =>
-      utf8.encode('$id|$from|$to|$ts|$body');
+      MessageCipher.signedBytes(id: id, from: from, to: to, ts: ts, body: body);
 
   void _loadPeerKeys() {
     _peerKeys.clear();
@@ -845,40 +829,16 @@ class ChatService extends ChangeNotifier
 
   /// Encrypt [bytes] for a conversation, mirroring the text path. Returns the
   /// base64 payload and whether it was encrypted.
-  Future<(String, bool)> _encryptConv(String convId, List<int> bytes) async {
-    final Channel? group = channelById(convId);
-    if (group != null && group.isPrivate && group.groupKey.isNotEmpty) {
-      return (await AppKeys.sealSym(group.groupKey, bytes), true);
-    }
-    final PeerKeys? peer = _peerKeys[convId];
-    if (_keys != null && peer != null && !_engine.groupIds.contains(convId)) {
-      return (await _keys.seal(peer.agree, bytes), true);
-    }
-    return (base64Url.encode(bytes), false);
-  }
+  Future<(String, bool)> _encryptConv(String convId, List<int> bytes) =>
+      _cipher.encryptFor(convId, bytes);
 
-  /// Decrypt a received media payload using the transfer's recorded mode.
-  Future<Uint8List?> _decryptPayload(_IncomingMedia meta, String b64) async {
-    if (b64.isEmpty) return null;
-    if (!meta.enc) {
-      try {
-        return Uint8List.fromList(base64Url.decode(b64));
-      } catch (_) {
-        return null;
-      }
-    }
-    final Channel? group = channelById(meta.convId);
-    if (group != null && group.isPrivate && group.groupKey.isNotEmpty) {
-      final List<int>? c = await AppKeys.openSym(group.groupKey, b64);
-      return c == null ? null : Uint8List.fromList(c);
-    }
-    final PeerKeys? peer = _peerKeys[meta.fromId];
-    if (_keys != null && peer != null) {
-      final List<int>? c = await _keys.open(peer.agree, b64);
-      return c == null ? null : Uint8List.fromList(c);
-    }
-    return null; // encrypted but we lack the key
-  }
+  Future<Uint8List?> _decryptPayload(_IncomingMedia meta, String b64) =>
+      _cipher.decryptPayload(
+        enc: meta.enc,
+        convId: meta.convId,
+        fromId: meta.fromId,
+        b64: b64,
+      );
 
   @override
   Future<void> onMediaReceived(Envelope manifest) async {
@@ -1269,41 +1229,11 @@ class ChatService extends ChangeNotifier
     notifyListeners();
   }
 
-  /// Decrypt + authenticate an encrypted 1:1 message. Returns the plaintext, a
-  /// placeholder if we lack the sender's key, or null to drop (forged/corrupt).
-  Future<String?> _openDirectMessage(Envelope m) async {
-    final AppKeys? keys = _keys;
-    final PeerKeys? peer = _peerKeys[m.fromId];
-    if (keys == null || peer == null) return '🔒 Encrypted message';
-    final bool ok = await AppKeys.verifyB64(
-      _signedBytes(
-          id: m.id, from: m.fromId, to: m.toId, ts: m.ts, body: m.body),
-      m.sig,
-      peer.sign,
-    );
-    if (!ok) return null;
-    final List<int>? clear = await keys.open(peer.agree, m.body);
-    return clear == null ? null : utf8.decode(clear);
-  }
+  Future<String?> _openDirectMessage(Envelope m) =>
+      _cipher.openDirectMessage(m);
 
-  /// Decrypt an encrypted group message with the group key, verifying the
-  /// sender's signature when we know their key. Returns null to drop.
-  Future<String?> _openGroupMessage(Envelope m) async {
-    final Channel? group = channelById(m.toId);
-    if (group == null || group.groupKey.isEmpty) return '🔒 Encrypted message';
-    final PeerKeys? sender = _peerKeys[m.fromId];
-    if (sender != null) {
-      final bool ok = await AppKeys.verifyB64(
-        _signedBytes(
-            id: m.id, from: m.fromId, to: m.toId, ts: m.ts, body: m.body),
-        m.sig,
-        sender.sign,
-      );
-      if (!ok) return null; // forged by someone whose key we hold
-    }
-    final List<int>? clear = await AppKeys.openSym(group.groupKey, m.body);
-    return clear == null ? null : utf8.decode(clear);
-  }
+  Future<String?> _openGroupMessage(Envelope m) =>
+      _cipher.openGroupMessage(m, channelById(m.toId)?.groupKey);
 
   /// When the user opens a 1:1 conversation, send read receipts back to the
   /// sender for any of their messages we have not acknowledged as read yet.
