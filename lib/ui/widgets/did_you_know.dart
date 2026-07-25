@@ -26,7 +26,7 @@ class _DidYouKnowStripState extends State<DidYouKnowStrip> {
     super.initState();
     // Start at a varied index so different screens do not show the same line.
     _i = DateTime.now().second % widget.facts.length;
-    _timer = Timer.periodic(const Duration(seconds: 7), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (mounted) setState(() => _i = (_i + 1) % widget.facts.length);
     });
   }
@@ -55,7 +55,22 @@ class _DidYouKnowStripState extends State<DidYouKnowStrip> {
           const SizedBox(width: 8),
           Expanded(
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
+              duration: const Duration(milliseconds: 450),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (Widget child, Animation<double> anim) {
+                // Slide up + fade so the change is clearly visible.
+                return FadeTransition(
+                  opacity: anim,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.6),
+                      end: Offset.zero,
+                    ).animate(anim),
+                    child: child,
+                  ),
+                );
+              },
               child: Text(
                 widget.facts[_i],
                 key: ValueKey<int>(_i),

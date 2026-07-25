@@ -50,10 +50,20 @@ abstract class Civic {
         'expression.',
     'Studchat keeps working with no internet by relaying messages phone to '
         'phone, so a message reaches you even in a signal dead-zone.',
-    'Your messages, contacts and identity never leave your device — there '
+    'Your messages, contacts and identity never leave your device - there '
         'is no server to hold them.',
     'A message you send can be carried by a stranger’s phone and delivered '
         'later, when the recipient comes back in range.',
+    'No SIM and no internet needed: Bluetooth and Wi-Fi carry your message '
+        'directly between phones.',
+    'Start a group by name: anyone nearby who joins the same channel name '
+        'lands in the same room, no invite links.',
+    'The Eighth Schedule of the Constitution recognises 22 official '
+        'languages of India.',
+    'Every message carries a hop limit, so it spreads only as far as it '
+        'usefully can, then stops.',
+    'Fundamental Duties (Article 51A) ask every citizen to promote harmony '
+        'and protect the environment.',
   ];
 
   /// Independent-project disclaimer. Important: this app is NOT affiliated with
