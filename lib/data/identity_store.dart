@@ -15,6 +15,7 @@ class IdentityStore {
 
   static const String _kAppId = 'studchat.appId';
   static const String _kName = 'studchat.name';
+  static const String _kBio = 'studchat.bio';
   static const String _kKeys = 'studchat.keys';
   static const Uuid _uuid = Uuid();
 
@@ -32,11 +33,19 @@ class IdentityStore {
       appId = _uuid.v4();
       await _prefs.setString(_kAppId, appId);
     }
-    return Identity(appId: appId, name: _prefs.getString(_kName) ?? '');
+    return Identity(
+      appId: appId,
+      name: _prefs.getString(_kName) ?? '',
+      bio: _prefs.getString(_kBio) ?? '',
+    );
   }
 
   Future<void> setName(String name) async {
     await _prefs.setString(_kName, name.trim());
+  }
+
+  Future<void> setBio(String bio) async {
+    await _prefs.setString(_kBio, bio.trim());
   }
 
   /// Load this device's long-term encryption keys, minting and storing them on

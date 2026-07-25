@@ -30,25 +30,29 @@ class _ProfileSheet extends StatefulWidget {
 
 class _ProfileSheetState extends State<_ProfileSheet> {
   late final TextEditingController _name;
+  late final TextEditingController _bio;
 
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(
-      text: context.read<ChatService>().identity.name,
-    );
+    final ChatService service = context.read<ChatService>();
+    _name = TextEditingController(text: service.identity.name);
+    _bio = TextEditingController(text: service.identity.bio);
   }
 
   @override
   void dispose() {
     _name.dispose();
+    _bio.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     final String name = _name.text.trim();
     if (name.isEmpty) return;
-    await context.read<ChatService>().updateName(name);
+    final ChatService service = context.read<ChatService>();
+    await service.updateName(name);
+    await service.updateBio(_bio.text.trim());
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -91,6 +95,23 @@ class _ProfileSheetState extends State<_ProfileSheet> {
             textCapitalization: TextCapitalization.words,
             maxLength: 24,
             decoration: const InputDecoration(counterText: ''),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'About',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _bio,
+            textCapitalization: TextCapitalization.sentences,
+            maxLength: 120,
+            maxLines: 3,
+            minLines: 1,
+            decoration: const InputDecoration(
+              counterText: '',
+              hintText: 'A short line about you (stays on this device)',
+            ),
           ),
           const SizedBox(height: 16),
           const Text(

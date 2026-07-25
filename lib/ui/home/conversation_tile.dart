@@ -27,8 +27,9 @@ class ConversationTile extends StatelessWidget {
     if (last == null) return const SizedBox.shrink();
     final bool self = service.isSelf(contact.appId);
     final bool blocked = service.isBlocked(contact.appId);
-    final Color muted =
-        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+    final bool unread = service.isUnread(contact.appId);
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final Color muted = scheme.onSurface.withValues(alpha: 0.6);
 
     return ListTile(
       onTap: () => onOpen(contact),
@@ -45,7 +46,9 @@ class ConversationTile extends StatelessWidget {
               self ? '${contact.name} (You)' : contact.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontWeight: unread ? FontWeight.w800 : FontWeight.w600,
+              ),
             ),
           ),
           if (blocked) ...<Widget>[
@@ -59,10 +62,7 @@ class ConversationTile extends StatelessWidget {
           if (last.isOutgoing) ...<Widget>[
             StatusTicks(
               last.status,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.5),
+              color: scheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(width: 4),
           ],
@@ -71,17 +71,39 @@ class ConversationTile extends StatelessWidget {
               last.preview,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: muted),
+              style: TextStyle(
+                color: unread ? scheme.onSurface : muted,
+                fontWeight: unread ? FontWeight.w600 : FontWeight.w400,
+              ),
             ),
           ),
         ],
       ),
-      trailing: Text(
-        relativeTime(last.timestamp),
-        style: TextStyle(
-          fontSize: 12,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-        ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          Text(
+            relativeTime(last.timestamp),
+            style: TextStyle(
+              fontSize: 12,
+              color: unread
+                  ? scheme.primary
+                  : scheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+          if (unread) ...<Widget>[
+            const SizedBox(height: 5),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -46,8 +46,10 @@ class _ChatScreenState extends State<ChatScreen> {
     final ChatService service = context.read<ChatService>();
     _service = service;
     service.addListener(_reload);
-    // Mark this conversation as on-screen so its messages don't notify.
+    // Mark this conversation as on-screen so its messages don't notify, and
+    // clear any unread flag now that we are looking at it.
     service.openConversationId = widget.peer.appId;
+    service.clearUnread(widget.peer.appId);
     _reload();
   }
 

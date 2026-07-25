@@ -41,6 +41,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _service = service;
     service.addListener(_reload);
     service.openConversationId = widget.channel.id;
+    service.clearUnread(widget.channel.id);
     _reload();
   }
 

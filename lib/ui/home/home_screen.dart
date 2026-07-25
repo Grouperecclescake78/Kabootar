@@ -120,9 +120,14 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: _tab,
         onDestinationSelected: (int i) => setState(() => _tab = i),
         destinations: <NavigationDestination>[
-          const NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
+          NavigationDestination(
+            icon: service.unreadCount > 0
+                ? Badge(
+                    label: Text('${service.unreadCount}'),
+                    child: const Icon(Icons.chat_bubble_outline),
+                  )
+                : const Icon(Icons.chat_bubble_outline),
+            selectedIcon: const Icon(Icons.chat_bubble),
             label: 'Chats',
           ),
           NavigationDestination(

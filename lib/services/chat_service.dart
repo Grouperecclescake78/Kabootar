@@ -140,6 +140,11 @@ class ChatService extends ChangeNotifier
   final Set<String> _hidden = <String>{};
   final Set<String> _blocked = <String>{};
 
+  /// Conversations with unread activity: set when a message arrives while you
+  /// are not looking at them, or manually via "mark as unread"; cleared when
+  /// you open the chat.
+  final Set<String> _unread = <String>{};
+
   List<Contact> get contacts => List<Contact>.unmodifiable(_contactList);
   List<Channel> get channels => List<Channel>.unmodifiable(_channelList);
   List<MeshEvent> get activityLog => List<MeshEvent>.unmodifiable(_activityLog);
@@ -195,6 +200,28 @@ class ChatService extends ChangeNotifier
   bool isArchived(String id) => _archived.contains(id);
   bool isHidden(String id) => _hidden.contains(id);
   bool isBlocked(String id) => _blocked.contains(id);
+  bool isUnread(String id) => _unread.contains(id);
+
+  /// How many conversations are currently unread (for a tab badge).
+  int get unreadCount => _unread.length;
+
+  /// Manually flag or clear a conversation's unread state.
+  Future<void> setUnread(String convId, {required bool unread}) async {
+    if (unread) {
+      if (!_unread.add(convId)) return;
+    } else if (!_unread.remove(convId)) {
+      return;
+    }
+    await _convMeta.setFlag(convId, 'unread', unread);
+    notifyListeners();
+  }
+
+  /// Called when a conversation is opened: clears its unread flag.
+  Future<void> clearUnread(String convId) async {
+    if (!_unread.remove(convId)) return;
+    await _convMeta.setFlag(convId, 'unread', false);
+    notifyListeners();
+  }
 
   /// Every 1:1 (and self) conversation, newest first, before archive/hide
   /// filtering is applied.
@@ -256,6 +283,7 @@ class ChatService extends ChangeNotifier
     _archived.addAll(await _convMeta.idsWith('archived'));
     _hidden.addAll(await _convMeta.idsWith('hidden'));
     _blocked.addAll(await _convMeta.idsWith('blocked'));
+    _unread.addAll(await _convMeta.idsWith('unread'));
     // Media reassembly is in-memory, so any transfer caught mid-flight by the
     // last shutdown is abandoned rather than left half-done.
     await _messages.markStaleMediaFailed();
@@ -288,6 +316,12 @@ class ChatService extends ChangeNotifier
   Future<void> updateName(String name) async {
     await _identityStore.setName(name);
     identity = identity.copyWith(name: name);
+    notifyListeners();
+  }
+
+  Future<void> updateBio(String bio) async {
+    await _identityStore.setBio(bio);
+    identity = identity.copyWith(bio: bio);
     notifyListeners();
   }
 
@@ -870,6 +904,7 @@ class ChatService extends ChangeNotifier
       await _convMeta.setFlag(convId, 'hidden', false);
     }
     _latestPerPeer[convId] = row;
+    _markUnreadIfAway(convId);
     _maybeNotify(
       isChannel: isChannel,
       convId: convId,
@@ -1072,6 +1107,7 @@ class ChatService extends ChangeNotifier
       await _convMeta.setFlag(convId, 'hidden', false);
     }
     _latestPerPeer[convId] = row;
+    _markUnreadIfAway(convId);
     _maybeNotify(
       isChannel: isChannel,
       convId: convId,
@@ -1079,6 +1115,15 @@ class ChatService extends ChangeNotifier
       body: bodyText,
     );
     notifyListeners();
+  }
+
+  /// Flag a conversation unread when a message lands there while the user is
+  /// looking elsewhere.
+  void _markUnreadIfAway(String convId) {
+    if (appResumed && openConversationId == convId) return;
+    if (_unread.add(convId)) {
+      unawaited(_convMeta.setFlag(convId, 'unread', true));
+    }
   }
 
   /// Raise a notification for an incoming message (already decrypted) unless the

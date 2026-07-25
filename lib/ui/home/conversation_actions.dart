@@ -5,6 +5,8 @@ import '../../core/models/contact.dart';
 import '../../services/chat_service.dart';
 
 enum _ConvAction {
+  markUnread,
+  markRead,
   archive,
   unarchive,
   hide,
@@ -26,6 +28,7 @@ Future<void> showConversationActions(BuildContext context, Contact c) async {
   final bool archived = service.isArchived(c.appId);
   final bool hidden = service.isHidden(c.appId);
   final bool blocked = service.isBlocked(c.appId);
+  final bool unread = service.isUnread(c.appId);
   final Color danger = Theme.of(context).colorScheme.error;
 
   final _ConvAction? action = await showModalBottomSheet<_ConvAction>(
@@ -47,6 +50,15 @@ Future<void> showConversationActions(BuildContext context, Contact c) async {
             ),
           ),
           const Divider(height: 1),
+          ListTile(
+            leading: Icon(unread
+                ? Icons.mark_chat_read_outlined
+                : Icons.mark_chat_unread_outlined),
+            title: Text(unread ? 'Mark as read' : 'Mark as unread'),
+            onTap: () => Navigator.of(ctx).pop(
+              unread ? _ConvAction.markRead : _ConvAction.markUnread,
+            ),
+          ),
           ListTile(
             leading: Icon(
               archived ? Icons.unarchive_outlined : Icons.archive_outlined,
@@ -97,6 +109,12 @@ Future<void> showConversationActions(BuildContext context, Contact c) async {
     ..showSnackBar(SnackBar(content: Text(text)));
 
   switch (action) {
+    case _ConvAction.markUnread:
+      await service.setUnread(c.appId, unread: true);
+      snack('Marked as unread');
+    case _ConvAction.markRead:
+      await service.setUnread(c.appId, unread: false);
+      snack('Marked as read');
     case _ConvAction.archive:
       await service.archiveChat(c.appId, archived: true);
       snack('Chat archived');

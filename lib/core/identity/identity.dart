@@ -4,11 +4,17 @@
 /// messages are addressed to - deliberately decoupled from the transport's
 /// per-session device id, which churns every time the radio reconnects.
 class Identity {
-  const Identity({required this.appId, required this.name});
+  const Identity({required this.appId, required this.name, this.bio = ''});
 
   final String appId;
   final String name;
 
-  Identity copyWith({String? name}) =>
-      Identity(appId: appId, name: name ?? this.name);
+  /// A short "about" line the user writes about themselves. Stored on-device.
+  final String bio;
+
+  Identity copyWith({String? name, String? bio}) => Identity(
+        appId: appId,
+        name: name ?? this.name,
+        bio: bio ?? this.bio,
+      );
 }

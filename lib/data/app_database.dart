@@ -12,7 +12,7 @@ class AppDatabase {
 
   final Database db;
 
-  static const int _schemaVersion = 7;
+  static const int _schemaVersion = 8;
 
   static Future<AppDatabase> open({String? path}) async {
     final String dbPath =
@@ -124,7 +124,8 @@ class AppDatabase {
         id        TEXT PRIMARY KEY,
         archived  INTEGER NOT NULL DEFAULT 0,
         hidden    INTEGER NOT NULL DEFAULT 0,
-        blocked   INTEGER NOT NULL DEFAULT 0
+        blocked   INTEGER NOT NULL DEFAULT 0,
+        unread    INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -174,6 +175,12 @@ class AppDatabase {
         await db.execute('ALTER TABLE messages ADD COLUMN $col');
       }
       await _createMediaChunks(db);
+    }
+    // v7 -> v8: per-conversation unread flag.
+    if (from < 8) {
+      await db.execute(
+        'ALTER TABLE conv_meta ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
+      );
     }
   }
 
