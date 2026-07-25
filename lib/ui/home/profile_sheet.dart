@@ -217,7 +217,7 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           ],
           _SettingsTile(
             leading: const Chakra(size: 30),
-            title: 'India & Studchat',
+            title: 'India & Kabootar',
             subtitle: 'Preamble, our duties, privacy & terms',
             onTap: () {
               Navigator.of(context).pop();
@@ -247,7 +247,7 @@ class _ProfileSheetState extends State<_ProfileSheet> {
 }
 
 /// A tappable settings row on a subtle filled background, used for the
-/// Hidden-chats and India/Studchat entries in the profile sheet.
+/// Hidden-chats and India/Kabootar entries in the profile sheet.
 class _SettingsTile extends StatelessWidget {
   const _SettingsTile({
     required this.leading,

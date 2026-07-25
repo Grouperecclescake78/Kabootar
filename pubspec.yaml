@@ -1,4 +1,4 @@
-name: studchat
+name: kabootar
 description: >-
   An offline-first, serverless 1:1 messenger. Messages hop phone-to-phone over
   Bluetooth/Wi-Fi and are delivered whenever the recipient comes back in range,

@@ -5,7 +5,7 @@ import '../../theme/app_theme.dart';
 
 /// The little delivery indicator on an outgoing message - the familiar
 /// clock / single-tick / double-tick / blue-double-tick language, mapped to
-/// states Studchat can actually prove:
+/// states Kabootar can actually prove:
 ///   sending   → clock (queued, no peer yet)
 ///   sent      → single tick (handed to the mesh)
 ///   delivered → grey double tick (end-to-end ack came back)

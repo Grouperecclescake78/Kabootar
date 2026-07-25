@@ -1,11 +1,11 @@
 # Architecture
 
-Studchat is a **delay-tolerant network (DTN)** messenger. This document explains
+Kabootar is a **delay-tolerant network (DTN)** messenger. This document explains
 the routing protocol, the layering, and the design decisions behind them.
 
 ## The problem
 
-A normal messenger assumes a path to a server exists. Studchat assumes it does
+A normal messenger assumes a path to a server exists. Kabootar assumes it does
 not. What it assumes instead is weaker but often true: **some people are
 physically near you, at least sometimes.** The job is to turn intermittent,
 short-range, phone-to-phone contact into reliable 1:1 delivery.

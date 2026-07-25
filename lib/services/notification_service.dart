@@ -30,7 +30,7 @@ class NotificationService {
         const AndroidNotificationChannel(
           _channelId,
           _channelName,
-          description: 'New Studchat messages',
+          description: 'New Kabootar messages',
           importance: Importance.high,
         ),
       );
@@ -61,7 +61,7 @@ class NotificationService {
     const AndroidNotificationDetails android = AndroidNotificationDetails(
       _channelId,
       _channelName,
-      channelDescription: 'New Studchat messages',
+      channelDescription: 'New Kabootar messages',
       importance: Importance.high,
       priority: Priority.high,
       ticker: 'New message',

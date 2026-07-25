@@ -32,7 +32,7 @@ class MeshTab extends StatelessWidget {
                     ? AppColors.online
                     : Colors.grey,
                 info:
-                    'How many other Studchat phones are directly connected to '
+                    'How many other Kabootar phones are directly connected to '
                     'you right now over Bluetooth / Wi-Fi. Messages hop between '
                     'these devices - the more nearby, the faster things move.',
               ),

@@ -1,4 +1,4 @@
-<!-- Thanks for contributing to studchat! -->
+<!-- Thanks for contributing to kabootar! -->
 
 ## What does this change?
 

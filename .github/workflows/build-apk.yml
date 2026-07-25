@@ -46,7 +46,7 @@ jobs:
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: studchat-apks
+          name: kabootar-apks
           path: build/app/outputs/flutter-apk/*-release.apk
           if-no-files-found: error
 

@@ -61,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: <Widget>[
             const Chakra(size: 24),
             const SizedBox(width: 10),
-            // The landing tab is branded 'Studchat'; the others keep their name.
-            Text(_tab == 0 ? 'Studchat' : _titles[_tab]),
+            // The landing tab is branded 'Kabootar'; the others keep their name.
+            Text(_tab == 0 ? 'Kabootar' : _titles[_tab]),
           ],
         ),
         actions: <Widget>[

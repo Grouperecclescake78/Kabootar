@@ -53,7 +53,7 @@ class ChatService extends ChangeNotifier
     _transport = transport ??
         NearbyTransport(
           deviceName: _shortName(identity.name),
-          serviceType: 'studchat',
+          serviceType: 'kabootar',
         );
     _messages = MessageRepository(database.db);
     _contacts = ContactRepository(database.db);
@@ -1430,7 +1430,7 @@ class ChatService extends ChangeNotifier
 
   static String _shortName(String name) {
     final String trimmed = name.trim();
-    if (trimmed.isEmpty) return 'Studchat';
+    if (trimmed.isEmpty) return 'Kabootar';
     return trimmed.length <= 20 ? trimmed : trimmed.substring(0, 20);
   }
 

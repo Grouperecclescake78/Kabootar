@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping improve studchat. Because the mesh is peer-to-peer,
+        Thanks for helping improve kabootar. Because the mesh is peer-to-peer,
         details about your devices and range matter a lot.
   - type: textarea
     id: what-happened
@@ -20,7 +20,7 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. Open studchat on both phones
+        1. Open kabootar on both phones
         2. ...
         3. See error
     validations:
@@ -48,10 +48,10 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: "Output of `adb logcat | grep -iE 'flutter|studchat'` if you have it."
+      description: "Output of `adb logcat | grep -iE 'flutter|kabootar'` if you have it."
       render: shell
   - type: input
     id: version
     attributes:
-      label: studchat version / commit
+      label: kabootar version / commit
       placeholder: "1.0.0 or commit sha"

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:studchat/core/mesh/envelope.dart';
-import 'package:studchat/core/mesh/mesh_config.dart';
-import 'package:studchat/core/mesh/mesh_ports.dart';
+import 'package:kabootar/core/mesh/envelope.dart';
+import 'package:kabootar/core/mesh/mesh_config.dart';
+import 'package:kabootar/core/mesh/mesh_ports.dart';
 
 import 'support/in_memory_mesh.dart';
 

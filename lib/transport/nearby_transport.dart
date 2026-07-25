@@ -12,7 +12,7 @@ import 'mesh_transport.dart';
 /// in range auto-connect. Note the platform wall documented in the design -
 /// this meshes Android<->Android and iOS<->iOS, but not across the two.
 class NearbyTransport implements MeshTransport {
-  NearbyTransport({required this.deviceName, this.serviceType = 'studchat'});
+  NearbyTransport({required this.deviceName, this.serviceType = 'kabootar'});
 
   /// A human-ish name shown to peers during discovery. Kept short.
   final String deviceName;

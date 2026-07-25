@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:studchat/ui/onboarding/onboarding_screen.dart';
+import 'package:kabootar/ui/onboarding/onboarding_screen.dart';
 
 void main() {
   testWidgets('onboarding shows the brand and a call to action', (
@@ -10,7 +10,7 @@ void main() {
       MaterialApp(home: OnboardingScreen(onComplete: (String _) async {})),
     );
 
-    expect(find.text('Studchat'), findsOneWidget);
+    expect(find.text('Kabootar'), findsOneWidget);
     expect(find.text('Start messaging'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
   });

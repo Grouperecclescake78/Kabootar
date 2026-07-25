@@ -1,6 +1,6 @@
-# Contributing to Studchat
+# Contributing to Kabootar
 
-Thanks for your interest. Studchat is a small, focused codebase and the bar for
+Thanks for your interest. Kabootar is a small, focused codebase and the bar for
 changes is that they keep the layering clean and the mesh engine provable.
 
 ## Ground rules

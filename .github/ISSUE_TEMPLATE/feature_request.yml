@@ -1,12 +1,12 @@
 name: "✨ Feature request"
-description: Suggest an idea for studchat
+description: Suggest an idea for kabootar
 labels: ["enhancement"]
 body:
   - type: textarea
     id: problem
     attributes:
       label: What problem does this solve?
-      description: What are you trying to do that studchat makes hard today?
+      description: What are you trying to do that kabootar makes hard today?
     validations:
       required: true
   - type: textarea

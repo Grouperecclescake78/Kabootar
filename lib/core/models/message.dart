@@ -3,7 +3,7 @@ enum MessageDirection { incoming, outgoing }
 
 /// Lifecycle of an outgoing message, mirrored in the chat's status ticks.
 ///
-/// Only end-to-end signals are represented - Studchat never claims a state it
+/// Only end-to-end signals are represented - Kabootar never claims a state it
 /// cannot actually observe:
 ///   * [sending]   - queued into the mesh, not yet flooded to any peer.
 ///   * [sent]      - handed to at least one peer; now riding the mesh.

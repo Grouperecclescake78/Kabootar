@@ -4,7 +4,7 @@
 
 Please report security issues **privately**, not as public issues:
 
-- Open a [GitHub security advisory](https://github.com/royalpinto007/studchat/security/advisories/new), or
+- Open a [GitHub security advisory](https://github.com/royalpinto007/kabootar/security/advisories/new), or
 - email the maintainer.
 
 You will get an acknowledgement, and a fix or mitigation plan. Please give a
@@ -12,7 +12,7 @@ reasonable window to address the issue before any public disclosure.
 
 ## Scope and current guarantees
 
-Studchat is an offline mesh messenger. Be aware of what v1 does and does **not**
+Kabootar is an offline mesh messenger. Be aware of what v1 does and does **not**
 guarantee:
 
 | Property | Status in v1 |

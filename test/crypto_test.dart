@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:studchat/core/crypto/app_keys.dart';
+import 'package:kabootar/core/crypto/app_keys.dart';
 
 void main() {
   group('AppKeys', () {

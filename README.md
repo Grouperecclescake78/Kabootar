@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/royalpinto007/StudChat/main/docs/assets/logo.svg" width="96" alt="studchat logo" />
+<img src="https://raw.githubusercontent.com/royalpinto007/Kabootar/main/docs/assets/logo.svg" width="96" alt="kabootar logo" />
 
-# Studchat
+# Kabootar
 
-<img src="https://raw.githubusercontent.com/royalpinto007/StudChat/main/docs/assets/flag.svg" width="132" alt="Flag of India" />
+<img src="https://raw.githubusercontent.com/royalpinto007/Kabootar/main/docs/assets/flag.svg" width="132" alt="Flag of India" />
 
 **Proudly Made in India**
 
@@ -17,8 +17,8 @@ encryption**, private groups, and image sharing.
 
 <br/>
 
-[![CI](https://github.com/royalpinto007/StudChat/actions/workflows/ci.yml/badge.svg)](https://github.com/royalpinto007/StudChat/actions/workflows/ci.yml)
-[![Build APK](https://github.com/royalpinto007/StudChat/actions/workflows/build-apk.yml/badge.svg)](https://github.com/royalpinto007/StudChat/actions/workflows/build-apk.yml)
+[![CI](https://github.com/royalpinto007/Kabootar/actions/workflows/ci.yml/badge.svg)](https://github.com/royalpinto007/Kabootar/actions/workflows/ci.yml)
+[![Build APK](https://github.com/royalpinto007/Kabootar/actions/workflows/build-apk.yml/badge.svg)](https://github.com/royalpinto007/Kabootar/actions/workflows/build-apk.yml)
 [![mesh engine: 32 invariants](https://img.shields.io/badge/mesh_engine-32_invariants_green-2ea44f)](tool/engine_check.dart)
 <br/>
 [![Flutter](https://img.shields.io/badge/Flutter-3.22%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
@@ -37,13 +37,13 @@ encryption**, private groups, and image sharing.
 
 > [!NOTE]
 > **Why this exists.** When the network is down or jammed but people are nearby,
-> Studchat still gets your message through. Dead-zone buildings, basements, exam
+> Kabootar still gets your message through. Dead-zone buildings, basements, exam
 > halls, festivals, protests, stadiums, trains, remote areas, roaming with no
 > plan. Proximity is available even when the internet is not.
 
 ## What it is
 
-Studchat is a private **messenger with no backend at all**. Instead of routing
+Kabootar is a private **messenger with no backend at all**. Instead of routing
 through a server, your phone forms a peer-to-peer **mesh** with other phones
 nearby. A message you send is flooded to everyone in range, **carried onward**
 by each device it reaches, and delivered the moment a chain of carriers connects
@@ -54,7 +54,7 @@ It feels like a normal chat app, a contact list, saved history, sent/delivered
 receipts, end-to-end encrypted 1:1 chats and private groups, image sharing, but
 the transport underneath is a **store-and-forward mesh** rather than the cloud.
 
-|  | Studchat | Normal messenger |
+|  | Kabootar | Normal messenger |
 | --- | --- | --- |
 | Needs internet / cell data | **No** | Yes |
 | Needs a server or account | **No** | Yes |
@@ -172,10 +172,10 @@ flowchart TD
 <br/>
 
 ```bash
-git clone https://github.com/royalpinto007/StudChat.git
-cd studchat
+git clone https://github.com/royalpinto007/Kabootar.git
+cd kabootar
 
-flutter create . --platforms=android,ios --org dev.studchat  # native shell
+flutter create . --platforms=android,ios --org dev.kabootar  # native shell
 flutter pub get
 bash tool/patch_nearby_plugin.sh   # modernise the 2021-era mesh plugin
 flutter run                        # on a connected device
@@ -192,9 +192,9 @@ Full platform notes (permissions, minimum SDKs) are in
 <br/>
 
 Every push builds an installable APK. Download the latest from the
-[**Build APK** workflow](https://github.com/royalpinto007/StudChat/actions/workflows/build-apk.yml)
-(open the newest run → **Artifacts** → `studchat-apk`), or from
-[Releases](https://github.com/royalpinto007/StudChat/releases) once tagged.
+[**Build APK** workflow](https://github.com/royalpinto007/Kabootar/actions/workflows/build-apk.yml)
+(open the newest run → **Artifacts** → `kabootar-apk`), or from
+[Releases](https://github.com/royalpinto007/Kabootar/releases) once tagged.
 
 </details>
 
@@ -253,17 +253,17 @@ Designed in up front, so nothing surprises you:
 ## 🇮🇳 Made in India
 
 Built in India, open source, privacy-first. No servers, no foreign backend, no
-account: your messages and identity **never leave your device**. Studchat is the
+account: your messages and identity **never leave your device**. Kabootar is the
 kind of resilient, self-reliant tech that works in India's dead-zones, trains,
 and crowds, and it belongs to everyone who runs it.
 
 The app carries a tricolour identity and the **Ashoka Chakra**, and an in-app
-**"India & Studchat"** screen with the **Preamble** and the **Fundamental Duties
+**"India & Kabootar"** screen with the **Preamble** and the **Fundamental Duties
 (Article 51A)** for civic reference, plus friendly facts about how the mesh
 works.
 
 > [!NOTE]
-> Studchat is an **independent, citizen-built** project. It is **not affiliated
+> Kabootar is an **independent, citizen-built** project. It is **not affiliated
 > with or endorsed by** any government or political party. National symbols are
 > used respectfully; we deliberately never use the restricted State Emblem (the
 > Lion Capital). See [DISCLAIMER.md](DISCLAIMER.md).
@@ -278,21 +278,21 @@ Contributions are welcome. Good first steps:
 
 - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - Keep the mesh engine framework-free and add tests for routing changes
-- Open an [issue](https://github.com/royalpinto007/StudChat/issues/new/choose) or a PR
+- Open an [issue](https://github.com/royalpinto007/Kabootar/issues/new/choose) or a PR
 
 By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 Security issues: see [SECURITY.md](SECURITY.md).
 
 ## ⭐ Star this project
 
-If Studchat is useful or interesting, a star genuinely helps others find it.
+If Kabootar is useful or interesting, a star genuinely helps others find it.
 
-<a href="https://github.com/royalpinto007/StudChat/stargazers">
-  <img src="https://img.shields.io/github/stars/royalpinto007/StudChat?style=social" alt="GitHub stars" />
+<a href="https://github.com/royalpinto007/Kabootar/stargazers">
+  <img src="https://img.shields.io/github/stars/royalpinto007/Kabootar?style=social" alt="GitHub stars" />
 </a>
 
 Once the project gathers a few stars, a growth chart will render here via
-[star-history.com](https://star-history.com/#royalpinto007/StudChat&Date).
+[star-history.com](https://star-history.com/#royalpinto007/Kabootar&Date).
 
 ## 📄 License
 

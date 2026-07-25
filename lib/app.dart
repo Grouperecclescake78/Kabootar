@@ -22,14 +22,14 @@ import 'ui/widgets/made_in_india.dart';
 /// Root widget. Owns the async bootstrap (database + identity) and, crucially,
 /// provides the [ChatService] **above** [MaterialApp] so every pushed route
 /// (chats, channels, new-chat) can read it, not just the home screen.
-class StudchatApp extends StatefulWidget {
-  const StudchatApp({super.key});
+class KabootarApp extends StatefulWidget {
+  const KabootarApp({super.key});
 
   @override
-  State<StudchatApp> createState() => _StudchatAppState();
+  State<KabootarApp> createState() => _KabootarAppState();
 }
 
-class _StudchatAppState extends State<StudchatApp> with WidgetsBindingObserver {
+class _KabootarAppState extends State<KabootarApp> with WidgetsBindingObserver {
   late final Future<_Boot> _bootFuture = _load();
   ChatService? _service;
   bool _onboarded = false;
@@ -124,7 +124,7 @@ class _StudchatAppState extends State<StudchatApp> with WidgetsBindingObserver {
   /// listened to, so switching light/dark re-themes the whole app live.
   Widget _app(Widget home, [ThemeController? theme]) {
     Widget material(BuildContext context) => MaterialApp(
-          title: 'Studchat',
+          title: 'Kabootar',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
@@ -172,7 +172,7 @@ class _Splash extends StatelessWidget {
               const Chakra(size: 88),
               const SizedBox(height: 22),
               const Text(
-                'Studchat',
+                'Kabootar',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,

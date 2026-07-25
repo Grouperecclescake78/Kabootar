@@ -118,7 +118,7 @@ class NewChatScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Text(
                 'No one yet. People appear here the moment they come into '
-                'range with Studchat open.',
+                'range with Kabootar open.',
                 style: TextStyle(
                   fontSize: 13,
                   height: 1.4,

@@ -1,7 +1,7 @@
-import 'package:studchat/core/mesh/envelope.dart';
-import 'package:studchat/core/mesh/mesh_config.dart';
-import 'package:studchat/core/mesh/mesh_engine.dart';
-import 'package:studchat/core/mesh/mesh_ports.dart';
+import 'package:kabootar/core/mesh/envelope.dart';
+import 'package:kabootar/core/mesh/mesh_config.dart';
+import 'package:kabootar/core/mesh/mesh_engine.dart';
+import 'package:kabootar/core/mesh/mesh_ports.dart';
 
 /// In-memory implementations of the mesh ports plus a tiny network simulator,
 /// shared across the engine test suites. All framework-free.

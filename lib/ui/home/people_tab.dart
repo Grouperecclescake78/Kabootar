@@ -39,7 +39,7 @@ class PeopleTab extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   'There is no server and no friend list to sync. People appear '
-                  'here automatically the moment they open Studchat near you, so '
+                  'here automatically the moment they open Kabootar near you, so '
                   'the way to "add" someone is simply to be nearby with Bluetooth '
                   'and Wi-Fi on.',
                   style: TextStyle(
@@ -54,7 +54,7 @@ class PeopleTab extends StatelessWidget {
                     Clipboard.setData(
                       const ClipboardData(
                         text:
-                            "Let's chat on Studchat - it works offline, phone to "
+                            "Let's chat on Kabootar - it works offline, phone to "
                             'phone, no internet or SIM needed. Get it and open it '
                             'near me.',
                       ),
@@ -216,8 +216,8 @@ class _Empty extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Studchat is scanning for nearby phones over Bluetooth and Wi-Fi. '
-              'Anyone running Studchat within range will appear here.',
+              'Kabootar is scanning for nearby phones over Bluetooth and Wi-Fi. '
+              'Anyone running Kabootar within range will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

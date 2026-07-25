@@ -48,7 +48,7 @@ abstract class Civic {
     'The Ashoka Chakra on the national flag has 24 spokes.',
     'Article 19(1)(a) guarantees every citizen the freedom of speech and '
         'expression.',
-    'Studchat keeps working with no internet by relaying messages phone to '
+    'Kabootar keeps working with no internet by relaying messages phone to '
         'phone, so a message reaches you even in a signal dead-zone.',
     'Your messages, contacts and identity never leave your device - there '
         'is no server to hold them.',
@@ -69,7 +69,7 @@ abstract class Civic {
   /// Independent-project disclaimer. Important: this app is NOT affiliated with
   /// or endorsed by any government or political party.
   static const String disclaimer =
-      'Studchat is an independent, open-source project built in India by a '
+      'Kabootar is an independent, open-source project built in India by a '
       'citizen. It is not affiliated with, authorised by, or endorsed by the '
       'Government of India, any State Government, or any political party or '
       'organisation.\n\n'

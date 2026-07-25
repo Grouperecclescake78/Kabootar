@@ -1,6 +1,6 @@
 # Disclaimer
 
-**Studchat is an independent, open-source project built in India by a citizen.**
+**Kabootar is an independent, open-source project built in India by a citizen.**
 
 It is **not** affiliated with, authorised by, or endorsed by the Government of
 India, any State Government, or any political party or organisation. Any national
