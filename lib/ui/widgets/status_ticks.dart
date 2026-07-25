@@ -5,10 +5,11 @@ import '../../theme/app_theme.dart';
 
 /// The little delivery indicator on an outgoing message - the familiar
 /// clock / single-tick / double-tick / blue-double-tick language, mapped to
-/// states studchat can actually prove:
+/// states Studchat can actually prove:
 ///   sending   → clock (queued, no peer yet)
 ///   sent      → single tick (handed to the mesh)
-///   delivered → double blue tick (end-to-end ack came back)
+///   delivered → grey double tick (end-to-end ack came back)
+///   read      → blue double tick (recipient opened and saw it)
 ///   failed    → error glyph
 class StatusTicks extends StatelessWidget {
   const StatusTicks(this.status, {this.color, super.key});
@@ -26,6 +27,8 @@ class StatusTicks extends StatelessWidget {
       case MessageStatus.sent:
         return Icon(Icons.done, size: 15, color: base);
       case MessageStatus.delivered:
+        return Icon(Icons.done_all, size: 15, color: base);
+      case MessageStatus.read:
         return const Icon(Icons.done_all, size: 15, color: AppColors.delivered);
       case MessageStatus.failed:
         return Icon(Icons.error_outline, size: 14, color: Colors.red.shade300);
@@ -39,9 +42,11 @@ extension MessageStatusLabel on MessageStatus {
       case MessageStatus.sending:
         return 'Queued';
       case MessageStatus.sent:
-        return 'Sent to mesh';
+        return 'Sent';
       case MessageStatus.delivered:
         return 'Delivered';
+      case MessageStatus.read:
+        return 'Read';
       case MessageStatus.failed:
         return 'Failed';
     }

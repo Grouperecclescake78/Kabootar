@@ -42,8 +42,13 @@ abstract class MeshDelegate {
   /// A [EnvelopeKind.msg] addressed to us arrived. Persist and display it.
   Future<void> onMessageDelivered(Envelope message);
 
-  /// A delivery receipt for one of *our* sent messages came back.
-  Future<void> onAckReceived(String acknowledgedMessageId);
+  /// A delivery receipt for one of *our* sent messages came back. [receiptTs]
+  /// is when the recipient delivered it (the receipt's send time).
+  Future<void> onAckReceived(String acknowledgedMessageId, int receiptTs);
+
+  /// A read receipt for one of *our* sent messages came back: the recipient
+  /// opened the conversation and saw it. [receiptTs] is when they read it.
+  Future<void> onReadReceived(String readMessageId, int receiptTs);
 
   /// We learned who is on the other end of a link (from a [hello]).
   Future<void> onHelloReceived(String appId, String displayName);

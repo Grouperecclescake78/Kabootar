@@ -30,8 +30,13 @@ class CollectingDelegate implements MeshDelegate {
   Future<void> onMessageDelivered(Envelope message) async =>
       delivered.add(message);
 
+  final List<String> read = <String>[];
+
   @override
-  Future<void> onAckReceived(String id) async => acked.add(id);
+  Future<void> onAckReceived(String id, int ts) async => acked.add(id);
+
+  @override
+  Future<void> onReadReceived(String id, int ts) async => read.add(id);
 
   @override
   Future<void> onHelloReceived(String appId, String name) async =>

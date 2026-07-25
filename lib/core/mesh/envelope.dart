@@ -13,7 +13,8 @@ import 'dart:convert';
 enum EnvelopeKind {
   hello,
   msg,
-  ack;
+  ack,
+  read;
 
   static EnvelopeKind fromWire(String value) {
     switch (value) {
@@ -23,6 +24,8 @@ enum EnvelopeKind {
         return EnvelopeKind.msg;
       case 'ack':
         return EnvelopeKind.ack;
+      case 'read':
+        return EnvelopeKind.read;
       default:
         throw FormatException('Unknown envelope kind: $value');
     }
@@ -79,6 +82,7 @@ class Envelope {
   bool get isHello => kind == EnvelopeKind.hello;
   bool get isMessage => kind == EnvelopeKind.msg;
   bool get isAck => kind == EnvelopeKind.ack;
+  bool get isRead => kind == EnvelopeKind.read;
 
   /// A copy of this envelope one hop older. Everything is preserved except a
   /// decremented [ttl] - the [id] in particular, so de-dup keeps working.

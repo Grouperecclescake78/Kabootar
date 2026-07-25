@@ -10,6 +10,7 @@ import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/message_bubble.dart';
+import 'message_info_sheet.dart';
 
 /// A 1:1 conversation. Reloads history from the database and re-reads it on
 /// every [ChatService] change so incoming messages and status ticks update
@@ -44,11 +45,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _reload() async {
-    final List<Message> next = await context.read<ChatService>().conversation(
-          widget.peer.appId,
-        );
+    final ChatService service = context.read<ChatService>();
+    final List<Message> next = await service.conversation(widget.peer.appId);
     if (!mounted) return;
     setState(() => _messages = next);
+    // We are looking at this conversation, so tell the sender we have read it.
+    service.markConversationRead(widget.peer.appId);
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToBottom());
   }
 
@@ -151,8 +153,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     controller: _scroll,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     itemCount: _messages.length,
-                    itemBuilder: (BuildContext context, int i) =>
-                        MessageBubble(_messages[i]),
+                    itemBuilder: (BuildContext context, int i) => MessageBubble(
+                      _messages[i],
+                      onLongPress: () => showMessageInfo(context, _messages[i]),
+                    ),
                   ),
           ),
           _Composer(controller: _input, onSend: _send),

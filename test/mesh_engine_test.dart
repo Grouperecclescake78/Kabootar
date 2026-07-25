@@ -262,4 +262,22 @@ void main() {
       expect(a.delegate.delivered, isEmpty); // sender de-dups its own message
     });
   });
+
+  group('MeshEngine - read receipts', () {
+    test('a read receipt reaches the original sender', () async {
+      final MeshNetwork net = MeshNetwork();
+      final Node a = net.add('A');
+      final Node b = net.add('B');
+      net.connect('A', 'B');
+
+      final Envelope sent = await a.engine.sendMessage(toId: 'B', body: 'seen?');
+      await net.pump();
+      expect(a.delegate.acked, contains(sent.id)); // delivered
+
+      // B opens the chat and reads it.
+      await b.engine.sendReadReceipt(toId: 'A', messageId: sent.id);
+      await net.pump();
+      expect(a.delegate.read, contains(sent.id));
+    });
+  });
 }

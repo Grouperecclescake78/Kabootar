@@ -70,8 +70,15 @@ class CollectingDelegate implements MeshDelegate {
   Future<void> onMessageDelivered(Envelope message) async =>
       delivered.add(message);
 
+  final List<String> read = <String>[];
+
   @override
-  Future<void> onAckReceived(String messageId) async => acked.add(messageId);
+  Future<void> onAckReceived(String messageId, int ts) async =>
+      acked.add(messageId);
+
+  @override
+  Future<void> onReadReceived(String messageId, int ts) async =>
+      read.add(messageId);
 
   @override
   Future<void> onHelloReceived(String appId, String name) async =>
@@ -158,8 +165,8 @@ class Network {
   void disconnect(String a, String b) => _links.remove(_key(a, b));
 
   Iterable<String> peersOf(String id) => nodes.keys.where(
-    (String other) => other != id && _links.contains(_key(id, other)),
-  );
+        (String other) => other != id && _links.contains(_key(id, other)),
+      );
 
   void enqueue(String target, Envelope e, String from) =>
       _queue.add(_Frame(target, e, from));
@@ -490,6 +497,30 @@ Future<void> scenarioChannels() async {
   );
 }
 
+Future<void> scenarioReadReceipt() async {
+  section('Read receipt (recipient opens chat -> sender sees "read")');
+  final Network net = Network();
+  net.add('A');
+  net.add('B');
+  net.connect('A', 'B');
+
+  final Envelope sent = await net.nodes['A']!.engine.sendMessage(
+    toId: 'B',
+    body: 'seen test',
+  );
+  await net.pump();
+  check('A saw delivered (ack)',
+      net.nodes['A']!.delegate.acked.contains(sent.id));
+
+  // B opens the conversation and sends a read receipt for A's message.
+  await net.nodes['B']!.engine.sendReadReceipt(toId: 'A', messageId: sent.id);
+  await net.pump();
+  check(
+    'A received a read receipt for its message',
+    net.nodes['A']!.delegate.read.contains(sent.id),
+  );
+}
+
 Future<void> main() async {
   print('studchat mesh engine - behavioural verification');
   await scenarioDirectDelivery();
@@ -502,6 +533,7 @@ Future<void> main() async {
   await scenarioHousekeeping();
   await scenarioHello();
   await scenarioChannels();
+  await scenarioReadReceipt();
 
   print('\n── result');
   print('  $_passed passed, $_failed failed');

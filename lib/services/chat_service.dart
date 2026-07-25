@@ -82,6 +82,10 @@ class ChatService extends ChangeNotifier
   final Map<String, String> _deviceToApp = <String, String>{};
   final Set<String> _connectedDevices = <String>{};
 
+  /// Incoming message ids we have already sent a read receipt for (in-memory;
+  /// a resend after restart is harmless thanks to de-dup on the wire).
+  final Set<String> _readReceiptSent = <String>{};
+
   List<Contact> get contacts => List<Contact>.unmodifiable(_contactList);
   List<Channel> get channels => List<Channel>.unmodifiable(_channelList);
   List<MeshEvent> get activityLog => List<MeshEvent>.unmodifiable(_activityLog);
@@ -285,22 +289,63 @@ class ChatService extends ChangeNotifier
   }
 
   @override
-  Future<void> onAckReceived(String acknowledgedMessageId) async {
-    await _messages.updateStatus(
+  Future<void> onAckReceived(
+      String acknowledgedMessageId, int receiptTs) async {
+    await _messages.markDelivered(acknowledgedMessageId, receiptTs);
+    _bumpLatest(
       acknowledgedMessageId,
       MessageStatus.delivered,
+      deliveredAt: receiptTs,
     );
-    final Message? current = _latestPerPeer.values
-        .where((Message m) => m.id == acknowledgedMessageId)
-        .cast<Message?>()
-        .firstWhere((Message? m) => true, orElse: () => null);
-    if (current != null) {
-      _latestPerPeer[current.peerId] = current.copyWith(
-        status: MessageStatus.delivered,
-      );
-    }
     notifyListeners();
   }
+
+  @override
+  Future<void> onReadReceived(String readMessageId, int receiptTs) async {
+    await _messages.markRead(readMessageId, receiptTs);
+    _bumpLatest(readMessageId, MessageStatus.read, readAt: receiptTs);
+    notifyListeners();
+  }
+
+  /// When the user opens a 1:1 conversation, send read receipts back to the
+  /// sender for any of their messages we have not acknowledged as read yet.
+  Future<void> markConversationRead(String peerId) async {
+    if (peerId == identity.appId || _engine.groupIds.contains(peerId)) return;
+    final List<Message> msgs = await _messages.conversationWith(peerId);
+    for (final Message m in msgs) {
+      if (m.isIncoming && _readReceiptSent.add(m.id)) {
+        await _engine.sendReadReceipt(toId: peerId, messageId: m.id);
+      }
+    }
+  }
+
+  /// Update the cached latest-message-per-peer entry for [messageId] to a new
+  /// status, never downgrading (read > delivered > sent).
+  void _bumpLatest(
+    String messageId,
+    MessageStatus status, {
+    int? deliveredAt,
+    int? readAt,
+  }) {
+    for (final MapEntry<String, Message> e in _latestPerPeer.entries.toList()) {
+      if (e.value.id != messageId) continue;
+      final bool upgrade = _rank(status) > _rank(e.value.status);
+      _latestPerPeer[e.key] = e.value.copyWith(
+        status: upgrade ? status : e.value.status,
+        deliveredAt: deliveredAt,
+        readAt: readAt,
+      );
+      break;
+    }
+  }
+
+  static int _rank(MessageStatus s) => switch (s) {
+        MessageStatus.sending => 0,
+        MessageStatus.sent => 1,
+        MessageStatus.delivered => 2,
+        MessageStatus.read => 3,
+        MessageStatus.failed => -1,
+      };
 
   @override
   Future<void> onHelloReceived(String appId, String displayName) async {

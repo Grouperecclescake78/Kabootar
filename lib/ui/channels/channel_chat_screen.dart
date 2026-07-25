@@ -8,6 +8,7 @@ import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/message_bubble.dart';
+import '../chat/message_info_sheet.dart';
 
 /// A broadcast channel conversation. Messages are flooded to everyone nearby
 /// who has joined the same channel. Incoming bubbles are labelled with who sent
@@ -178,6 +179,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         senderName: m.isIncoming && m.senderId != null
                             ? service.senderLabel(m.senderId!)
                             : null,
+                        onLongPress: () => showMessageInfo(context, m),
                       );
                     },
                   ),

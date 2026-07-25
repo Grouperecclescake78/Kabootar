@@ -29,6 +29,38 @@ class MessageRepository {
     );
   }
 
+  /// Mark an outgoing message delivered (an ack came back). Does not downgrade
+  /// a message that is already read.
+  Future<void> markDelivered(String id, int at) async {
+    await _db.rawUpdate(
+      "UPDATE messages SET status = 'delivered', delivered_at = ? "
+      "WHERE id = ? AND status IN ('sending', 'sent')",
+      <Object?>[at, id],
+    );
+  }
+
+  /// Mark an outgoing message read (a read receipt came back), filling in the
+  /// delivered time too if it was never separately recorded.
+  Future<void> markRead(String id, int at) async {
+    await _db.rawUpdate(
+      "UPDATE messages SET status = 'read', read_at = ?, "
+      "delivered_at = COALESCE(delivered_at, ?) "
+      "WHERE id = ? AND status != 'read'",
+      <Object?>[at, at, id],
+    );
+  }
+
+  /// A single message by id, or null.
+  Future<Message?> byId(String id) async {
+    final List<Map<String, Object?>> rows = await _db.query(
+      'messages',
+      where: 'id = ?',
+      whereArgs: <Object?>[id],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : Message.fromRow(rows.first);
+  }
+
   /// Full conversation with one peer, oldest first.
   Future<List<Message>> conversationWith(String peerId) async {
     final List<Map<String, Object?>> rows = await _db.query(

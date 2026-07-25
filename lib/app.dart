@@ -91,13 +91,13 @@ class _StudchatAppState extends State<StudchatApp> {
   }
 
   Widget _app(Widget home) => MaterialApp(
-    title: 'Studchat',
-    debugShowCheckedModeBanner: false,
-    theme: AppTheme.light,
-    darkTheme: AppTheme.dark,
-    themeMode: ThemeMode.system,
-    home: home,
-  );
+        title: 'Studchat',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
+        home: home,
+      );
 }
 
 class _Boot {

@@ -126,9 +126,9 @@ class MeshEngine {
     await _seen.markSeen(envelope.id, envelope.ts);
     _emit(MeshEventType.received, envelope);
 
-    // An ack - for anyone - means the message it references has been delivered.
-    // Stop carrying that message; no point relaying what already arrived.
-    if (envelope.isAck) {
+    // An ack or read receipt - for anyone - means the message it references
+    // has arrived. Stop carrying that message; no point relaying what landed.
+    if (envelope.isAck || envelope.isRead) {
       _clearCarried(envelope.body);
     }
 
@@ -152,8 +152,14 @@ class MeshEngine {
   /// Rules 3 & 4: this envelope is for us.
   Future<void> _deliverToSelf(Envelope envelope) async {
     if (envelope.isAck) {
-      // Rule 4: a receipt for a message we sent.
-      await _delegate.onAckReceived(envelope.body);
+      // Rule 4: a delivery receipt for a message we sent.
+      await _delegate.onAckReceived(envelope.body, envelope.ts);
+      _emit(MeshEventType.delivered, envelope);
+      return;
+    }
+    if (envelope.isRead) {
+      // A read receipt: the recipient opened the conversation and saw it.
+      await _delegate.onReadReceived(envelope.body, envelope.ts);
       _emit(MeshEventType.delivered, envelope);
       return;
     }
@@ -161,6 +167,24 @@ class MeshEngine {
     await _delegate.onMessageDelivered(envelope);
     _emit(MeshEventType.delivered, envelope);
     await _emitAck(envelope);
+  }
+
+  /// Emit a read receipt for a message we received, addressed back to its
+  /// sender. Called when the user opens the conversation and sees it.
+  Future<void> sendReadReceipt({
+    required String toId,
+    required String messageId,
+  }) async {
+    final Envelope read = Envelope(
+      id: _newId(),
+      kind: EnvelopeKind.read,
+      fromId: myId,
+      toId: toId,
+      body: messageId,
+      ts: _clock(),
+      ttl: config.ttl,
+    );
+    await enqueueOutbound(read);
   }
 
   /// Emit an end-to-end delivery receipt addressed back to the sender. The ack

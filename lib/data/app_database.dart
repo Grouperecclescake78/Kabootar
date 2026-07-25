@@ -12,7 +12,7 @@ class AppDatabase {
 
   final Database db;
 
-  static const int _schemaVersion = 2;
+  static const int _schemaVersion = 3;
 
   static Future<AppDatabase> open({String? path}) async {
     final String dbPath =
@@ -46,7 +46,9 @@ class AppDatabase {
         direction  TEXT NOT NULL,
         status     TEXT NOT NULL,
         ts         INTEGER NOT NULL,
-        sender_id  TEXT
+        sender_id  TEXT,
+        delivered_at INTEGER,
+        read_at      INTEGER
       )
     ''');
     await db.execute(
@@ -79,6 +81,11 @@ class AppDatabase {
     if (from < 2) {
       await _createChannels(db);
       await db.execute('ALTER TABLE messages ADD COLUMN sender_id TEXT');
+    }
+    // v2 -> v3: delivery + read receipt timestamps for message info.
+    if (from < 3) {
+      await db.execute('ALTER TABLE messages ADD COLUMN delivered_at INTEGER');
+      await db.execute('ALTER TABLE messages ADD COLUMN read_at INTEGER');
     }
   }
 
