@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:open_filex/open_filex.dart';
 
 import '../../core/models/message.dart';
 
@@ -113,6 +114,94 @@ class _Overlay extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// A file attachment card: icon, name and size (or transfer state). Tapping a
+/// completed file opens it with the system's default app.
+class FileMessage extends StatelessWidget {
+  const FileMessage({required this.message, required this.color, super.key});
+
+  final Message message;
+  final Color color;
+
+  bool get _complete =>
+      message.mediaStatus == 'complete' &&
+      message.mediaPath != null &&
+      File(message.mediaPath!).existsSync();
+
+  @override
+  Widget build(BuildContext context) {
+    final bool failed = message.mediaStatus == 'failed';
+    final String subtitle = failed
+        ? 'Not delivered'
+        : _complete
+            ? _sizeLabel(message.mediaBytes)
+            : 'Receiving…';
+
+    return InkWell(
+      onTap: _complete ? () => OpenFilex.open(message.mediaPath!) : null,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                failed
+                    ? Icons.error_outline
+                    : _complete
+                        ? Icons.insert_drive_file_outlined
+                        : Icons.downloading_outlined,
+                color: color,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    message.mediaName ?? 'File',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: color.withValues(alpha: 0.7),
+                      fontSize: 11.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _sizeLabel(int? bytes) {
+    if (bytes == null) return '';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).round()} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }
 

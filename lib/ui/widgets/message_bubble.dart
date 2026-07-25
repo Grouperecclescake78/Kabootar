@@ -93,6 +93,8 @@ class MessageBubble extends StatelessWidget {
                   ),
                 if (message.isImage)
                   MediaImage(message: message)
+                else if (message.isFile)
+                  FileMessage(message: message, color: textColor)
                 else
                   Text(
                     message.body,

@@ -718,23 +718,57 @@ class ChatService extends ChangeNotifier
     return d;
   }
 
-  /// Send a picked image to a conversation: compress it, make a thumbnail,
-  /// encrypt (to the peer or group key, or plaintext for an open channel),
-  /// split into chunks and flood a manifest plus the chunks. The local copy is
-  /// stored immediately so the sender sees it right away.
+  /// Send a picked image: compress it and make a thumbnail, then hand it to the
+  /// shared media path (encrypt, chunk, flood).
   Future<void> sendImage({
     required String convId,
     required Uint8List bytes,
     String name = 'photo.jpg',
+  }) =>
+      _sendMedia(
+        convId: convId,
+        kind: 'image',
+        name: name,
+        mime: 'image/jpeg',
+        fileBytes: MediaCodec.compressImage(bytes),
+        thumbBytes: MediaCodec.thumbnail(bytes),
+        ext: 'jpg',
+      );
+
+  /// Send an arbitrary file over the same chunked media path (no compression or
+  /// thumbnail).
+  Future<void> sendFile({
+    required String convId,
+    required Uint8List bytes,
+    required String name,
+    String mime = 'application/octet-stream',
+  }) =>
+      _sendMedia(
+        convId: convId,
+        kind: 'file',
+        name: name,
+        mime: mime,
+        fileBytes: bytes,
+        ext: p.extension(name).replaceFirst('.', ''),
+      );
+
+  /// The shared media send path: store the local copy immediately, then
+  /// encrypt (to the peer or group key, or plaintext on an open channel), split
+  /// into chunks and flood a manifest plus the chunks.
+  Future<void> _sendMedia({
+    required String convId,
+    required String kind,
+    required String name,
+    required String mime,
+    required Uint8List fileBytes,
+    required String ext,
+    Uint8List? thumbBytes,
   }) async {
-    final Uint8List full = MediaCodec.compressImage(bytes);
-    final Uint8List thumb = MediaCodec.thumbnail(bytes);
     final String mediaId = _uuid.v4();
     final int ts = _nowMs();
-
-    final File file =
-        File(p.join((await _mediaDirectory()).path, '$mediaId.jpg'));
-    await file.writeAsBytes(full);
+    final String fileName = ext.isEmpty ? mediaId : '$mediaId.$ext';
+    final File file = File(p.join((await _mediaDirectory()).path, fileName));
+    await file.writeAsBytes(fileBytes);
 
     final Message row = Message(
       id: mediaId,
@@ -746,13 +780,13 @@ class ChatService extends ChangeNotifier
           : MessageStatus.sent,
       timestamp: ts,
       senderId: _engine.groupIds.contains(convId) ? identity.appId : null,
-      mediaKind: 'image',
+      mediaKind: kind,
       mediaName: name,
-      mediaMime: 'image/jpeg',
+      mediaMime: mime,
       mediaPath: file.path,
-      mediaBytes: full.length,
+      mediaBytes: fileBytes.length,
       mediaStatus: 'complete',
-      thumb: base64Url.encode(thumb),
+      thumb: thumbBytes == null ? null : base64Url.encode(thumbBytes),
     );
     await _messages.upsert(row);
     _latestPerPeer[convId] = row;
@@ -760,14 +794,16 @@ class ChatService extends ChangeNotifier
 
     if (convId == identity.appId) return; // self note: nothing to flood
 
-    final (String fullB64, bool enc) = await _encryptConv(convId, full);
-    final (String thumbCipher, _) = await _encryptConv(convId, thumb);
+    final (String fullB64, bool enc) = await _encryptConv(convId, fileBytes);
+    final String thumbCipher =
+        thumbBytes == null ? '' : (await _encryptConv(convId, thumbBytes)).$1;
     final List<String> chunks = MediaCodec.chunk(fullB64);
     final String manifest = jsonEncode(<String, Object?>{
-      'k': 'image',
+      'k': kind,
       'n': name,
-      'm': 'image/jpeg',
-      'b': full.length,
+      'm': mime,
+      'x': ext,
+      'b': fileBytes.length,
       'c': chunks.length,
       'e': enc ? 1 : 0,
       't': thumbCipher,
@@ -867,11 +903,13 @@ class ChatService extends ChangeNotifier
         jsonDecode(manifest.body) as Map<String, Object?>;
     final String mediaId = manifest.id;
     final int total = (j['c'] as num?)?.toInt() ?? 0;
+    final String kind = (j['k'] as String?) ?? 'image';
     final _IncomingMedia meta = _IncomingMedia(
       enc: (j['e'] as num?)?.toInt() == 1,
       convId: convId,
       fromId: manifest.fromId,
       total: total,
+      ext: (j['x'] as String?) ?? (kind == 'image' ? 'jpg' : ''),
     );
     _incomingMedia[mediaId] = meta;
     final Uint8List? thumbBytes =
@@ -885,9 +923,11 @@ class ChatService extends ChangeNotifier
       status: MessageStatus.delivered,
       timestamp: manifest.ts,
       senderId: isChannel ? manifest.fromId : null,
-      mediaKind: 'image',
-      mediaName: (j['n'] as String?) ?? 'photo.jpg',
-      mediaMime: (j['m'] as String?) ?? 'image/jpeg',
+      mediaKind: kind,
+      mediaName:
+          (j['n'] as String?) ?? (kind == 'image' ? 'photo.jpg' : 'file'),
+      mediaMime: (j['m'] as String?) ??
+          (kind == 'image' ? 'image/jpeg' : 'application/octet-stream'),
       mediaBytes: (j['b'] as num?)?.toInt(),
       mediaStatus: 'receiving',
       thumb: thumbBytes == null ? '' : base64Url.encode(thumbBytes),
@@ -909,7 +949,7 @@ class ChatService extends ChangeNotifier
       isChannel: isChannel,
       convId: convId,
       sender: senderLabel(manifest.fromId),
-      body: '📷 Photo',
+      body: kind == 'image' ? '📷 Photo' : '📎 File',
     );
     notifyListeners();
     await _tryReassemble(mediaId);
@@ -948,8 +988,9 @@ class ChatService extends ChangeNotifier
         await _messages.upsert(msg.copyWith(mediaStatus: 'failed'));
       }
     } else {
-      final File file =
-          File(p.join((await _mediaDirectory()).path, '$mediaId.jpg'));
+      final String fileName =
+          meta.ext.isEmpty ? mediaId : '$mediaId.${meta.ext}';
+      final File file = File(p.join((await _mediaDirectory()).path, fileName));
       await file.writeAsBytes(bytes);
       if (msg != null) {
         await _messages.upsert(
@@ -1406,10 +1447,12 @@ class _IncomingMedia {
     required this.convId,
     required this.fromId,
     required this.total,
+    required this.ext,
   });
 
   final bool enc;
   final String convId;
   final String fromId;
   final int total;
+  final String ext;
 }

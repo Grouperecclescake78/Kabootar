@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/contact.dart';
@@ -12,6 +11,7 @@ import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/message_bubble.dart';
+import 'attach.dart';
 import 'composer.dart';
 import 'message_actions.dart';
 import 'message_info_sheet.dart';
@@ -100,21 +100,8 @@ class _ChatScreenState extends State<ChatScreen> {
     await _reload();
   }
 
-  Future<void> _attachImage() async {
-    final ChatService service = context.read<ChatService>();
-    final XFile? picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1920,
-      maxHeight: 1920,
-      imageQuality: 88,
-    );
-    if (picked == null) return;
-    final Uint8List bytes = await picked.readAsBytes();
-    await service.sendImage(
-      convId: widget.peer.appId,
-      bytes: bytes,
-      name: picked.name,
-    );
+  Future<void> _attach() async {
+    await showAttachSheet(context, widget.peer.appId);
     await _reload();
   }
 
@@ -394,7 +381,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Composer(
               controller: _input,
               onSend: _send,
-              onAttach: _attachImage,
+              onAttach: _attach,
             ),
           ],
         ),

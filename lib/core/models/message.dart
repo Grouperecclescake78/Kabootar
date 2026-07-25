@@ -78,8 +78,14 @@ class Message {
   bool get isMedia => mediaKind != null;
   bool get isImage => mediaKind == 'image';
 
+  bool get isFile => mediaKind == 'file';
+
   /// One-line preview for conversation lists.
-  String get preview => isImage ? '📷 Photo' : body;
+  String get preview => isImage
+      ? '📷 Photo'
+      : isFile
+          ? '📎 ${mediaName ?? 'File'}'
+          : body;
 
   Message copyWith({
     MessageStatus? status,
