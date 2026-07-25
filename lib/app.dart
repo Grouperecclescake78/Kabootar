@@ -9,6 +9,8 @@ import 'services/chat_service.dart';
 import 'theme/app_theme.dart';
 import 'ui/home/home_screen.dart';
 import 'ui/onboarding/onboarding_screen.dart';
+import 'ui/widgets/chakra.dart';
+import 'ui/widgets/made_in_india.dart';
 
 /// Root widget. Owns the async bootstrap (database + identity), routes between
 /// onboarding and the live session, and provides the [ChatService] to the tree.
@@ -145,29 +147,25 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Container(
-              width: 68,
-              height: 68,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: <Color>[scheme.primary, AppColors.brandDark],
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.hub_rounded,
-                color: Colors.white,
-                size: 36,
+            Chakra(size: 88),
+            SizedBox(height: 22),
+            Text(
+              'studchat',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 22),
-            const SizedBox(
+            SizedBox(height: 6),
+            TricolorBar(width: 90, height: 5),
+            SizedBox(height: 28),
+            SizedBox(
               width: 22,
               height: 22,
               child: CircularProgressIndicator(strokeWidth: 2.2),

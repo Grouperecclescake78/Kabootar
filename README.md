@@ -242,6 +242,21 @@ account: your messages and identity **never leave your device**. studchat is the
 kind of resilient, self-reliant tech that works in India's dead-zones, trains,
 and crowds, and it belongs to everyone who runs it.
 
+The app carries a tricolour identity and the **Ashoka Chakra**, and an in-app
+**"India & studchat"** screen with the **Preamble** and the **Fundamental Duties
+(Article 51A)** for civic reference, plus friendly facts about how the mesh
+works.
+
+> [!NOTE]
+> studchat is an **independent, citizen-built** project. It is **not affiliated
+> with or endorsed by** any government or political party. National symbols are
+> used respectfully; we deliberately never use the restricted State Emblem (the
+> Lion Capital). See [DISCLAIMER.md](DISCLAIMER.md).
+
+**Legal:** [Privacy Policy](PRIVACY.md) · [Terms of Use](TERMS.md) ·
+[Disclaimer](DISCLAIMER.md). In v1, messages are **not** end-to-end encrypted,
+so please do not send sensitive information yet.
+
 ## 🤝 Contributing
 
 Contributions are welcome. Good first steps:

@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/chat_service.dart';
+import '../about/about_screen.dart';
 import '../widgets/avatar.dart';
+import '../widgets/chakra.dart';
 import '../widgets/made_in_india.dart';
 
 /// Bottom sheet showing this device's identity: display name (editable) and the
@@ -136,7 +138,37 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           ),
           const SizedBox(height: 20),
           FilledButton(onPressed: _save, child: const Text('Save')),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
+          Material(
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(12),
+            child: ListTile(
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              leading: const Chakra(size: 30),
+              title: const Text(
+                'India & studchat',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              subtitle: const Text(
+                'Preamble, our duties, privacy & terms',
+                style: TextStyle(fontSize: 12),
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 20),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AboutScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
           const Center(
             child: MadeInIndia(caption: 'Made in India · Works offline'),
           ),
