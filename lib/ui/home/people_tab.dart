@@ -22,66 +22,71 @@ class PeopleTab extends StatelessWidget {
       showDragHandle: true,
       builder: (BuildContext ctx) {
         final ColorScheme scheme = Theme.of(ctx).colorScheme;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const Text(
-                'Add people',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'There is no server and no friend list to sync. People appear '
-                'here automatically the moment they open Studchat near you, so '
-                'the way to "add" someone is simply to be nearby with Bluetooth '
-                'and Wi-Fi on.',
-                style: TextStyle(
-                  fontSize: 13.5,
-                  height: 1.5,
-                  color: scheme.onSurface.withValues(alpha: 0.75),
+        // SafeArea(bottom) keeps the last button clear of the system
+        // navigation bar; without it the fixed padding collides with it.
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  'Add people',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                 ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: () {
-                  Clipboard.setData(
-                    const ClipboardData(
-                      text:
-                          "Let's chat on Studchat - it works offline, phone to "
-                          'phone, no internet or SIM needed. Get it and open it '
-                          'near me.',
-                    ),
-                  );
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Invite message copied')),
-                  );
-                },
-                icon: const Icon(Icons.ios_share),
-                label: const Text('Copy an invite message'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
+                const SizedBox(height: 10),
+                Text(
+                  'There is no server and no friend list to sync. People appear '
+                  'here automatically the moment they open Studchat near you, so '
+                  'the way to "add" someone is simply to be nearby with Bluetooth '
+                  'and Wi-Fi on.',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    height: 1.5,
+                    color: scheme.onSurface.withValues(alpha: 0.75),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: appId));
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Your mesh address copied')),
-                  );
-                },
-                icon: const Icon(Icons.badge_outlined),
-                label: const Text('Copy my mesh address'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(
+                      const ClipboardData(
+                        text:
+                            "Let's chat on Studchat - it works offline, phone to "
+                            'phone, no internet or SIM needed. Get it and open it '
+                            'near me.',
+                      ),
+                    );
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Invite message copied')),
+                    );
+                  },
+                  icon: const Icon(Icons.ios_share),
+                  label: const Text('Copy an invite message'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: appId));
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Your mesh address copied')),
+                    );
+                  },
+                  icon: const Icon(Icons.badge_outlined),
+                  label: const Text('Copy my mesh address'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

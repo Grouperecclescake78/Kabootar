@@ -18,54 +18,57 @@ Future<void> showEmojiPicker(
     builder: (BuildContext ctx) {
       final ColorScheme scheme = Theme.of(ctx).colorScheme;
       final Color muted = scheme.onSurface.withValues(alpha: 0.45);
-      return SizedBox(
-        height: 380,
-        child: EmojiPicker(
-          textEditingController: controller,
-          config: Config(
-            height: 380,
-            // We bundle Twemoji, which has every glyph, so do not filter by
-            // what the platform font can render.
-            checkPlatformCompatibility: false,
-            emojiTextStyle: const TextStyle(fontFamily: 'Twemoji'),
-            // Gboard-style order: search on top, emoji grid in the middle, the
-            // category strip along the bottom (thumb-reachable).
-            viewOrderConfig: const ViewOrderConfig(
-              top: EmojiPickerItem.searchBar,
-              middle: EmojiPickerItem.emojiView,
-              bottom: EmojiPickerItem.categoryBar,
-            ),
-            emojiViewConfig: EmojiViewConfig(
-              columns: 8,
-              emojiSizeMax: 28,
-              verticalSpacing: 6,
-              horizontalSpacing: 4,
-              gridPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
+      return SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 380,
+          child: EmojiPicker(
+            textEditingController: controller,
+            config: Config(
+              height: 380,
+              // We bundle Twemoji, which has every glyph, so do not filter by
+              // what the platform font can render.
+              checkPlatformCompatibility: false,
+              emojiTextStyle: const TextStyle(fontFamily: 'Twemoji'),
+              // Gboard-style order: search on top, emoji grid in the middle, the
+              // category strip along the bottom (thumb-reachable).
+              viewOrderConfig: const ViewOrderConfig(
+                top: EmojiPickerItem.searchBar,
+                middle: EmojiPickerItem.emojiView,
+                bottom: EmojiPickerItem.categoryBar,
               ),
-              backgroundColor: scheme.surface,
-              recentsLimit: 40,
-              buttonMode: ButtonMode.MATERIAL,
-            ),
-            categoryViewConfig: CategoryViewConfig(
-              tabBarHeight: 48,
-              backgroundColor: scheme.surface,
-              indicatorColor: scheme.primary,
-              iconColorSelected: scheme.primary,
-              backspaceColor: scheme.primary,
-              iconColor: muted,
-              dividerColor: scheme.outlineVariant.withValues(alpha: 0.25),
-            ),
-            bottomActionBarConfig: BottomActionBarConfig(
-              backgroundColor: scheme.surface,
-              buttonColor: scheme.primary,
-              buttonIconColor: scheme.onPrimary,
-            ),
-            searchViewConfig: SearchViewConfig(
-              backgroundColor: scheme.surface,
-              buttonIconColor: muted,
-              hintText: 'Search emoji',
+              emojiViewConfig: EmojiViewConfig(
+                columns: 8,
+                emojiSizeMax: 28,
+                verticalSpacing: 6,
+                horizontalSpacing: 4,
+                gridPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                backgroundColor: scheme.surface,
+                recentsLimit: 40,
+                buttonMode: ButtonMode.MATERIAL,
+              ),
+              categoryViewConfig: CategoryViewConfig(
+                tabBarHeight: 48,
+                backgroundColor: scheme.surface,
+                indicatorColor: scheme.primary,
+                iconColorSelected: scheme.primary,
+                backspaceColor: scheme.primary,
+                iconColor: muted,
+                dividerColor: scheme.outlineVariant.withValues(alpha: 0.25),
+              ),
+              bottomActionBarConfig: BottomActionBarConfig(
+                backgroundColor: scheme.surface,
+                buttonColor: scheme.primary,
+                buttonIconColor: scheme.onPrimary,
+              ),
+              searchViewConfig: SearchViewConfig(
+                backgroundColor: scheme.surface,
+                buttonIconColor: muted,
+                hintText: 'Search emoji',
+              ),
             ),
           ),
         ),

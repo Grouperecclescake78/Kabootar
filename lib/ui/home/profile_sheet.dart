@@ -56,11 +56,15 @@ class _ProfileSheetState extends State<_ProfileSheet> {
     final String appId = service.identity.appId;
 
     return SingleChildScrollView(
+      // viewInsets clears the keyboard; padding.bottom clears the system
+      // navigation bar so the footer never hides behind it.
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
         top: 8,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom +
+            MediaQuery.of(context).padding.bottom +
+            24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
