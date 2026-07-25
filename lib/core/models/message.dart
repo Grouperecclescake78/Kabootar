@@ -3,12 +3,12 @@ enum MessageDirection { incoming, outgoing }
 
 /// Lifecycle of an outgoing message, mirrored in the chat's status ticks.
 ///
-/// Only end-to-end signals are represented — studchat never claims a state it
+/// Only end-to-end signals are represented - studchat never claims a state it
 /// cannot actually observe:
-///   * [sending]   — queued into the mesh, not yet flooded to any peer.
-///   * [sent]      — handed to at least one peer; now riding the mesh.
-///   * [delivered] — an end-to-end ack came back from the recipient.
-///   * [failed]    — gave up (aged out of the carry-cache undelivered).
+///   * [sending]   - queued into the mesh, not yet flooded to any peer.
+///   * [sent]      - handed to at least one peer; now riding the mesh.
+///   * [delivered] - an end-to-end ack came back from the recipient.
+///   * [failed]    - gave up (aged out of the carry-cache undelivered).
 ///
 /// Incoming messages are always [delivered].
 enum MessageStatus { sending, sent, delivered, failed }
@@ -29,7 +29,7 @@ class Message {
   /// Matches the wire envelope id. Primary key.
   final String id;
 
-  /// The *other* party's app id — the recipient for outgoing, the sender for
+  /// The *other* party's app id - the recipient for outgoing, the sender for
   /// incoming. This is what groups messages into a conversation.
   final String peerId;
 

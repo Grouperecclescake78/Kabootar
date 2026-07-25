@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/message.dart';
 import '../../theme/app_theme.dart';
 
-/// The little delivery indicator on an outgoing message — the familiar
+/// The little delivery indicator on an outgoing message - the familiar
 /// clock / single-tick / double-tick / blue-double-tick language, mapped to
 /// states studchat can actually prove:
 ///   sending   → clock (queued, no peer yet)

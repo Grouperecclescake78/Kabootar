@@ -4,9 +4,9 @@ import 'package:sqflite/sqflite.dart';
 /// Owns the single SQLite connection and the schema.
 ///
 /// Three tables mirror the data model in the design:
-///   * `contacts` — everyone we have met (learned from `hello`).
-///   * `messages` — chat history, keyed by the same id the mesh puts on the wire.
-///   * `seen`     — the de-dup set, persisted so a restart cannot re-flood.
+///   * `contacts` - everyone we have met (learned from `hello`).
+///   * `messages` - chat history, keyed by the same id the mesh puts on the wire.
+///   * `seen`     - the de-dup set, persisted so a restart cannot re-flood.
 class AppDatabase {
   AppDatabase._(this.db);
 

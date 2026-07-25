@@ -1,5 +1,5 @@
 /// A live transport link, identified by the transport's own per-session device
-/// id. This id churns on every reconnect — it is deliberately *not* the stable
+/// id. This id churns on every reconnect - it is deliberately *not* the stable
 /// app id the mesh addresses messages to. The mapping between the two is learned
 /// from the `hello` handshake.
 class TransportPeer {

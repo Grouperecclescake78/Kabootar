@@ -25,7 +25,7 @@ abstract class MeshOutbound {
 }
 
 /// Persistent de-duplication set. An envelope id that has ever been seen is
-/// never processed twice — this is what stops loops and flood amplification,
+/// never processed twice - this is what stops loops and flood amplification,
 /// and why it must survive restarts.
 abstract class SeenStore {
   Future<bool> hasSeen(String envelopeId);

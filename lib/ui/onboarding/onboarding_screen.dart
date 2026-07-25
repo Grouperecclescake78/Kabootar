@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
 /// First-launch screen: pick a display name. The stable app id is minted
-/// silently underneath — the user only ever chooses how they appear to peers.
+/// silently underneath - the user only ever chooses how they appear to peers.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({required this.onComplete, super.key});
 

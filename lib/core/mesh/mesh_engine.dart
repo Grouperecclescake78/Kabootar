@@ -7,7 +7,7 @@ import 'mesh_ports.dart';
 /// The store-and-forward heart of studchat: a delay-tolerant network using
 /// epidemic routing with end-to-end acknowledgements.
 ///
-/// It is deliberately framework-free — no Flutter, no transport plugin, no
+/// It is deliberately framework-free - no Flutter, no transport plugin, no
 /// SQLite. Everything it touches is a port ([MeshOutbound], [SeenStore],
 /// [MeshDelegate]) plus an injected clock and id generator, so the entire
 /// routing brain runs under plain-Dart unit tests.
@@ -99,7 +99,7 @@ class MeshEngine {
   }
 
   // ---------------------------------------------------------------------------
-  // Receive path — the six rules
+  // Receive path - the six rules
   // ---------------------------------------------------------------------------
 
   /// Process one envelope handed up by the transport.
@@ -121,7 +121,7 @@ class MeshEngine {
     await _seen.markSeen(envelope.id, envelope.ts);
     _emit(MeshEventType.received, envelope);
 
-    // An ack — for anyone — means the message it references has been delivered.
+    // An ack - for anyone - means the message it references has been delivered.
     // Stop carrying that message; no point relaying what already arrived.
     if (envelope.isAck) {
       _clearCarried(envelope.body);
@@ -132,7 +132,7 @@ class MeshEngine {
       return;
     }
 
-    // Rules 5 & 6: addressed to someone else — relay if it still has hops.
+    // Rules 5 & 6: addressed to someone else - relay if it still has hops.
     _relay(envelope);
   }
 
@@ -183,7 +183,7 @@ class MeshEngine {
   // ---------------------------------------------------------------------------
 
   /// A new transport link came up. Flush everything we are carrying to that
-  /// peer — they will de-dup whatever they already hold. This is the moment a
+  /// peer - they will de-dup whatever they already hold. This is the moment a
   /// message that was stranded on this device finally moves closer to its
   /// destination.
   void onPeerConnected(String peerId) {

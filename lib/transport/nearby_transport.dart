@@ -9,7 +9,7 @@ import 'mesh_transport.dart';
 ///
 /// It forms a P2P *cluster* (many-to-many) rather than a star, which is what an
 /// epidemic mesh wants: every device both advertises and browses, and any two
-/// in range auto-connect. Note the platform wall documented in the design —
+/// in range auto-connect. Note the platform wall documented in the design -
 /// this meshes Android<->Android and iOS<->iOS, but not across the two.
 class NearbyTransport implements MeshTransport {
   NearbyTransport({required this.deviceName, this.serviceType = 'studchat'});
@@ -17,7 +17,7 @@ class NearbyTransport implements MeshTransport {
   /// A human-ish name shown to peers during discovery. Kept short.
   final String deviceName;
 
-  /// Bonjour/Nearby service type. Must be <= 15 chars, lowercase — this is the
+  /// Bonjour/Nearby service type. Must be <= 15 chars, lowercase - this is the
   /// "network id" that scopes the mesh to the studchat community.
   final String serviceType;
 

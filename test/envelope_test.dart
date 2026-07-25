@@ -48,7 +48,7 @@ void main() {
         ts: 1,
         ttl: 4,
       );
-      // No name key emitted when empty — keeps the wire compact.
+      // No name key emitted when empty - keeps the wire compact.
       expect(msg.toJson().containsKey('n'), isFalse);
     });
 

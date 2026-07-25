@@ -6,7 +6,7 @@ import 'package:studchat/core/mesh/mesh_ports.dart';
 import 'support/in_memory_mesh.dart';
 
 void main() {
-  group('MeshEngine — delivery', () {
+  group('MeshEngine - delivery', () {
     test('delivers a message and returns an end-to-end ack (A <-> B)', () async {
       final MeshNetwork net = MeshNetwork();
       net.add('A');
@@ -45,7 +45,7 @@ void main() {
     });
   });
 
-  group('MeshEngine — relay & carry', () {
+  group('MeshEngine - relay & carry', () {
     test('relays through an uninvolved node (A - R - C)', () async {
       final MeshNetwork net = MeshNetwork();
       net.add('A');
@@ -107,7 +107,7 @@ void main() {
     });
   });
 
-  group('MeshEngine — bounds', () {
+  group('MeshEngine - bounds', () {
     test('drops a message that arrives with no hops left', () async {
       final MeshNetwork net = MeshNetwork();
       net.add('A');
@@ -187,7 +187,7 @@ void main() {
     });
   });
 
-  group('MeshEngine — hello', () {
+  group('MeshEngine - hello', () {
     test('learns a contact and does not relay the hello', () async {
       final MeshNetwork net = MeshNetwork();
       net.add('A');

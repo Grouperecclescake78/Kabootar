@@ -40,7 +40,7 @@ class MessageRepository {
     return rows.map(Message.fromRow).toList();
   }
 
-  /// The most recent message per peer — the data behind the conversation list.
+  /// The most recent message per peer - the data behind the conversation list.
   Future<Map<String, Message>> latestPerPeer() async {
     final List<Map<String, Object?>> rows = await _db.rawQuery('''
       SELECT m.* FROM messages m
@@ -56,7 +56,7 @@ class MessageRepository {
     };
   }
 
-  /// Outgoing messages still awaiting an ack — used to retry/re-flood on
+  /// Outgoing messages still awaiting an ack - used to retry/re-flood on
   /// reconnect and to age failed sends.
   Future<List<Message>> undelivered() async {
     final List<Map<String, Object?>> rows = await _db.query(

@@ -120,7 +120,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     title: 'Say hello',
                     message:
                         'Messages are delivered whenever this person comes '
-                        'into range — even if they are offline right now.',
+                        'into range - even if they are offline right now.',
                   )
                 : ListView.builder(
                     controller: _scroll,

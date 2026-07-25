@@ -2,7 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../core/models/contact.dart';
 
-/// Contact-list persistence. The list is not configured by hand — it accretes
+/// Contact-list persistence. The list is not configured by hand - it accretes
 /// from `hello` handshakes, so the main operation is an upsert that refreshes a
 /// peer's name and last-seen time each time we meet them.
 class ContactRepository {

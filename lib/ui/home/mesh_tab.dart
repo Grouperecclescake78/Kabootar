@@ -281,7 +281,7 @@ class _EventRow extends StatelessWidget {
       case MeshEventType.relayed:
         return 'Relayed onward toward the recipient';
       case MeshEventType.ttlExpired:
-        return 'Dropped — hop limit reached';
+        return 'Dropped - hop limit reached';
       case MeshEventType.cacheEvicted:
         return 'Freed carried storage (${e.detail})';
       case MeshEventType.ackEmitted:

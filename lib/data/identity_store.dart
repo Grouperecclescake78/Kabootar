@@ -6,7 +6,7 @@ import '../core/identity/identity.dart';
 /// Reads and writes this device's persistent [Identity].
 ///
 /// The `appId` is minted exactly once, on first launch, and then never changes
-/// for the life of the install — it is the address every message is sent to.
+/// for the life of the install - it is the address every message is sent to.
 class IdentityStore {
   IdentityStore(this._prefs);
 

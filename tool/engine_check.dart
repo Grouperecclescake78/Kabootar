@@ -412,7 +412,7 @@ Future<void> scenarioHello() async {
 }
 
 Future<void> main() async {
-  print('studchat mesh engine — behavioural verification');
+  print('studchat mesh engine - behavioural verification');
   await scenarioDirectDelivery();
   await scenarioDedup();
   await scenarioMultiHopRelay();

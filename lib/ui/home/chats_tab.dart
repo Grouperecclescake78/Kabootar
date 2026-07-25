@@ -9,7 +9,7 @@ import '../widgets/avatar.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/status_ticks.dart';
 
-/// The conversation list — contacts you have exchanged messages with, newest
+/// The conversation list - contacts you have exchanged messages with, newest
 /// activity first, with a one-line preview and unread-agnostic timestamp.
 class ChatsTab extends StatelessWidget {
   const ChatsTab({required this.onOpenChat, super.key});

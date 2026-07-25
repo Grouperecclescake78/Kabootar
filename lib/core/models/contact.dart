@@ -1,5 +1,5 @@
 /// Someone we have met on the mesh. Learned from a `hello`, not configured by
-/// hand — the contact list simply accretes as devices come into range.
+/// hand - the contact list simply accretes as devices come into range.
 class Contact {
   const Contact({
     required this.appId,
@@ -17,7 +17,7 @@ class Contact {
   /// Epoch milliseconds of the last time we saw them in range.
   final int lastSeen;
 
-  /// Whether this peer is connected right now. Not persisted — it is a live
+  /// Whether this peer is connected right now. Not persisted - it is a live
   /// property of the current transport session, layered on at read time.
   final bool online;
 

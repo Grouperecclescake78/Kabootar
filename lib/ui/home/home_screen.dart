@@ -10,7 +10,7 @@ import 'mesh_tab.dart';
 import 'people_tab.dart';
 import 'profile_sheet.dart';
 
-/// The app shell: a live mesh status pill in the bar, and three tabs — the
+/// The app shell: a live mesh status pill in the bar, and three tabs - the
 /// conversations you have, the people in range, and the mesh itself.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

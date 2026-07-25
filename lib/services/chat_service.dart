@@ -227,7 +227,7 @@ class ChatService extends ChangeNotifier
     try {
       envelope = Envelope.decode(payload);
     } on FormatException {
-      return; // poisoned frame — drop it
+      return; // poisoned frame - drop it
     }
     if (envelope.isHello) {
       _deviceToApp[deviceId] = envelope.fromId;

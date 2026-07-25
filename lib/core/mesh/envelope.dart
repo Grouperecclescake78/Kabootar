@@ -2,12 +2,12 @@ import 'dart:convert';
 
 /// The three kinds of unit that travel over the mesh.
 ///
-/// * [hello] — a link-local handshake. Not flooded, not relayed. When two
+/// * [hello] - a link-local handshake. Not flooded, not relayed. When two
 ///   devices form a transport link they trade a [hello] so each learns the
 ///   other's stable app id and display name (this is how the contact list is
 ///   built).
-/// * [msg]  — a 1:1 chat message addressed to a specific [Envelope.toId].
-/// * [ack]  — an end-to-end delivery receipt. Its [Envelope.body] carries the
+/// * [msg]  - a 1:1 chat message addressed to a specific [Envelope.toId].
+/// * [ack]  - an end-to-end delivery receipt. Its [Envelope.body] carries the
 ///   id of the message being acknowledged; it is addressed back to the
 ///   original sender and flows through the mesh the same way a message does.
 enum EnvelopeKind {
@@ -51,7 +51,7 @@ class Envelope {
   });
 
   /// Globally-unique id for this logical unit. The de-dup key. Stable across
-  /// every hop — this is what makes epidemic flooding idempotent.
+  /// every hop - this is what makes epidemic flooding idempotent.
   final String id;
 
   final EnvelopeKind kind;
@@ -73,7 +73,7 @@ class Envelope {
   /// dropped rather than forwarded. Bounds flood radius and storage.
   final int ttl;
 
-  /// Display name — only meaningful on a [hello].
+  /// Display name - only meaningful on a [hello].
   final String name;
 
   bool get isHello => kind == EnvelopeKind.hello;
@@ -81,7 +81,7 @@ class Envelope {
   bool get isAck => kind == EnvelopeKind.ack;
 
   /// A copy of this envelope one hop older. Everything is preserved except a
-  /// decremented [ttl] — the [id] in particular, so de-dup keeps working.
+  /// decremented [ttl] - the [id] in particular, so de-dup keeps working.
   Envelope relayed() => Envelope(
         id: id,
         kind: kind,
@@ -126,7 +126,7 @@ class Envelope {
   /// Compact wire form sent over the transport.
   String encode() => jsonEncode(toJson());
 
-  /// Parse a wire payload. Throws [FormatException] on anything malformed —
+  /// Parse a wire payload. Throws [FormatException] on anything malformed -
   /// callers on the receive path treat that as a poisoned frame and drop it.
   static Envelope decode(String payload) {
     final Object? decoded = jsonDecode(payload);

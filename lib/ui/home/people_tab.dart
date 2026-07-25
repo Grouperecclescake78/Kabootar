@@ -8,7 +8,7 @@ import '../widgets/avatar.dart';
 import '../widgets/empty_state.dart';
 
 /// Everyone the mesh has ever introduced us to, in-range peers first. This is
-/// where a conversation begins — the list is discovered, never typed in.
+/// where a conversation begins - the list is discovered, never typed in.
 class PeopleTab extends StatelessWidget {
   const PeopleTab({required this.onOpenChat, super.key});
 
