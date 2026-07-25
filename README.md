@@ -6,20 +6,20 @@
 
 <img src="https://raw.githubusercontent.com/royalpinto007/StudChat/main/docs/assets/flag.svg" width="132" alt="Flag of India" />
 
-**🇮🇳 Proudly Made in India**
+**Proudly Made in India**
 
 ### Chat that works with **no internet, no servers, no SIM.**
 
 Messages hop **phone-to-phone over Bluetooth and Wi-Fi** and are delivered
 whenever the other person comes back in range. An offline, serverless mesh
-messenger built on a delay-tolerant network with epidemic routing and
-end-to-end delivery receipts.
+messenger built on a delay-tolerant network with epidemic routing, **end-to-end
+encryption**, private groups, and image sharing.
 
 <br/>
 
 [![CI](https://github.com/royalpinto007/StudChat/actions/workflows/ci.yml/badge.svg)](https://github.com/royalpinto007/StudChat/actions/workflows/ci.yml)
 [![Build APK](https://github.com/royalpinto007/StudChat/actions/workflows/build-apk.yml/badge.svg)](https://github.com/royalpinto007/StudChat/actions/workflows/build-apk.yml)
-[![mesh engine: 24 invariants](https://img.shields.io/badge/mesh_engine-24_invariants_green-2ea44f)](tool/engine_check.dart)
+[![mesh engine: 32 invariants](https://img.shields.io/badge/mesh_engine-32_invariants_green-2ea44f)](tool/engine_check.dart)
 <br/>
 [![Flutter](https://img.shields.io/badge/Flutter-3.22%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-lightgrey)](docs/PLATFORM_SETUP.md)
@@ -43,16 +43,16 @@ end-to-end delivery receipts.
 
 ## What it is
 
-Studchat is a private **1:1 messenger with no backend at all**. Instead of
-routing through a server, your phone forms a peer-to-peer **mesh** with other
-phones nearby. A message you send is flooded to everyone in range, **carried
-onward** by each device it reaches, and delivered the moment a chain of carriers
-connects you to the recipient, even if that is minutes later after you have both
-walked away.
+Studchat is a private **messenger with no backend at all**. Instead of routing
+through a server, your phone forms a peer-to-peer **mesh** with other phones
+nearby. A message you send is flooded to everyone in range, **carried onward**
+by each device it reaches, and delivered the moment a chain of carriers connects
+you to the recipient, even if that is minutes later after you have both walked
+away.
 
 It feels like a normal chat app, a contact list, saved history, sent/delivered
-receipts, but the transport underneath is a **store-and-forward mesh** rather
-than the cloud.
+receipts, end-to-end encrypted 1:1 chats and private groups, image sharing, but
+the transport underneath is a **store-and-forward mesh** rather than the cloud.
 
 |  | Studchat | Normal messenger |
 | --- | --- | --- |
@@ -66,11 +66,17 @@ than the cloud.
 
 - 📡 **Truly offline** — Bluetooth + Wi-Fi peer links, zero infrastructure.
 - 🕓 **Store-and-forward** — messages wait and ride other phones until delivered.
+- 🔐 **End-to-end encrypted** — X25519 + Ed25519 + AES-GCM, with signed messages
+  and a safety code to verify a contact. Relays only ever see ciphertext.
+- 👥 **Private groups** — invite-only, encrypted with a shared group key.
+- 🖼️ **Image sharing** — photos compressed, chunked, and carried like text.
+- 🔔 **Notifications** — local alerts when a message arrives (no push server).
+- 🌗 **Light / dark theme**, archive / hide / block, delete-for-everyone,
+  mark-as-unread — the everyday chat controls.
 - ✅ **Delivery receipts** — end-to-end acks, WhatsApp-style ticks you can trust.
 - 🔁 **Self-healing routing** — epidemic flooding with idempotent de-duplication.
-- 🔒 **Private by default** — no account, no phone number, data stays on-device.
 - 📶 **Live mesh view** — watch peers, carried messages, and routing events.
-- 🧪 **Provably correct core** — 24 routing invariants verified in plain Dart.
+- 🧪 **Provably correct core** — 32 routing invariants verified in plain Dart.
 - 🇮🇳 **Made in India** — open source, no foreign backend.
 
 ## 📨 How your message travels
@@ -224,7 +230,8 @@ Designed in up front, so nothing surprises you:
   within an OS family.
 - **Range and density** — delivery needs a chain of carriers to exist. Sparse
   crowds mean slow or no delivery. Inherent to any mesh.
-- **Plaintext in v1** — end-to-end encryption is the next milestone, not shipped.
+- **No forward secrecy yet** — encryption uses long-term static keys; a
+  ratcheting scheme is future work. Open channels stay plaintext by design.
 - **Battery** — continuous advertise + scan is not free; duty-cycling is planned.
 
 ## 🗺 Roadmap
@@ -233,10 +240,13 @@ Designed in up front, so nothing surprises you:
 - [x] Store-and-forward with de-dup, TTL, and end-to-end acks
 - [x] Persistent history and contacts; resume undelivered on restart
 - [x] Live mesh diagnostics view
-- [x] 📢 Channels (broadcast group rooms, joined by name)
-- [ ] 🔐 End-to-end encryption (per-contact keys) + message signing
-- [ ] 👥 Private groups with membership
-- [ ] 🖼 Media over Wi-Fi transport
+- [x] 📢 Channels (broadcast group rooms, joined by code)
+- [x] 🔐 End-to-end encryption (X25519 + Ed25519 + AES-GCM) + message signing
+- [x] 👥 Private groups with membership (encrypted, invite-only)
+- [x] 🖼 Image sharing (compressed, chunked, carried like text)
+- [x] 🔔 Local notifications, 🌗 theme, and full chat management
+- [ ] 📎 Arbitrary file sharing over the same chunk path
+- [ ] 🔒 Forward secrecy (a message ratchet on top of the static keys)
 - [ ] 🔋 Battery duty-cycling
 - [ ] 🌉 Online bridge: any node with internet relays onward
 
