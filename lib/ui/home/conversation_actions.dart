@@ -4,7 +4,16 @@ import 'package:provider/provider.dart';
 import '../../core/models/contact.dart';
 import '../../services/chat_service.dart';
 
-enum _ConvAction { archive, unarchive, hide, clear, block, unblock, delete }
+enum _ConvAction {
+  archive,
+  unarchive,
+  hide,
+  unhide,
+  clear,
+  block,
+  unblock,
+  delete
+}
 
 /// Long-press action sheet for a conversation in a list: archive/unarchive,
 /// hide, clear, block/unblock, delete. Shared by the Chats tab and the
@@ -15,6 +24,7 @@ Future<void> showConversationActions(BuildContext context, Contact c) async {
   final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
   final bool self = service.isSelf(c.appId);
   final bool archived = service.isArchived(c.appId);
+  final bool hidden = service.isHidden(c.appId);
   final bool blocked = service.isBlocked(c.appId);
   final Color danger = Theme.of(context).colorScheme.error;
 
@@ -46,7 +56,13 @@ Future<void> showConversationActions(BuildContext context, Contact c) async {
               archived ? _ConvAction.unarchive : _ConvAction.archive,
             ),
           ),
-          if (!archived)
+          if (hidden)
+            ListTile(
+              leading: const Icon(Icons.visibility_outlined),
+              title: const Text('Unhide chat'),
+              onTap: () => Navigator.of(ctx).pop(_ConvAction.unhide),
+            )
+          else if (!archived)
             ListTile(
               leading: const Icon(Icons.visibility_off_outlined),
               title: const Text('Hide chat'),
@@ -89,7 +105,10 @@ Future<void> showConversationActions(BuildContext context, Contact c) async {
       snack('Chat unarchived');
     case _ConvAction.hide:
       await service.hideChat(c.appId, hidden: true);
-      snack('Chat hidden. It returns when there is new activity.');
+      snack('Chat hidden. Find it in your profile under Hidden chats.');
+    case _ConvAction.unhide:
+      await service.hideChat(c.appId, hidden: false);
+      snack('Chat unhidden');
     case _ConvAction.unblock:
       await service.blockContact(c.appId, blocked: false);
       snack('Unblocked');

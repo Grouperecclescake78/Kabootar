@@ -7,6 +7,7 @@ import '../about/about_screen.dart';
 import '../widgets/avatar.dart';
 import '../widgets/chakra.dart';
 import '../widgets/made_in_india.dart';
+import 'hidden_chats_screen.dart';
 
 /// Bottom sheet showing this device's identity: display name (editable) and the
 /// stable app id that messages are addressed to.
@@ -143,34 +144,35 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           const SizedBox(height: 20),
           FilledButton(onPressed: _save, child: const Text('Save')),
           const SizedBox(height: 12),
-          Material(
-            color: Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
-                .withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(12),
-            child: ListTile(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              leading: const Chakra(size: 30),
-              title: const Text(
-                'India & Studchat',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
-              subtitle: const Text(
-                'Preamble, our duties, privacy & terms',
-                style: TextStyle(fontSize: 12),
-              ),
-              trailing: const Icon(Icons.chevron_right, size: 20),
+          if (service.hiddenCount > 0) ...<Widget>[
+            _SettingsTile(
+              leading: const Icon(Icons.visibility_off_outlined),
+              title: 'Hidden chats',
+              subtitle: '${service.hiddenCount} '
+                  '${service.hiddenCount == 1 ? 'chat' : 'chats'} tucked away',
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const AboutScreen(),
+                    builder: (_) => const HiddenChatsScreen(),
                   ),
                 );
               },
             ),
+            const SizedBox(height: 12),
+          ],
+          _SettingsTile(
+            leading: const Chakra(size: 30),
+            title: 'India & Studchat',
+            subtitle: 'Preamble, our duties, privacy & terms',
+            onTap: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const AboutScreen(),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 16),
           const Center(
@@ -187,5 +189,43 @@ class _ProfileSheetState extends State<_ProfileSheet> {
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
     return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
         .toUpperCase();
+  }
+}
+
+/// A tappable settings row on a subtle filled background, used for the
+/// Hidden-chats and India/Studchat entries in the profile sheet.
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({
+    required this.leading,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final Widget leading;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withValues(alpha: 0.4),
+      borderRadius: BorderRadius.circular(12),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        leading: leading,
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        trailing: const Icon(Icons.chevron_right, size: 20),
+        onTap: onTap,
+      ),
+    );
   }
 }

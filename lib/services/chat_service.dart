@@ -138,6 +138,19 @@ class ChatService extends ChangeNotifier
       .where((String id) => !_engine.groupIds.contains(id))
       .length;
 
+  /// The conversations the user has hidden, newest first. Reachable from the
+  /// profile sheet so a hidden chat can always be found and unhidden.
+  List<Contact> hiddenConversations() => _buildConversations()
+      .where((Contact c) =>
+          _hidden.contains(c.appId) && !_archived.contains(c.appId))
+      .toList();
+
+  int get hiddenCount => _hidden
+      .where((String id) => _latestPerPeer.containsKey(id))
+      .where((String id) => !_engine.groupIds.contains(id))
+      .where((String id) => !_archived.contains(id))
+      .length;
+
   bool isArchived(String id) => _archived.contains(id);
   bool isHidden(String id) => _hidden.contains(id);
   bool isBlocked(String id) => _blocked.contains(id);
