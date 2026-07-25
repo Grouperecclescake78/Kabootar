@@ -10,6 +10,7 @@ import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/message_bubble.dart';
+import 'composer.dart';
 import 'message_info_sheet.dart';
 
 /// A 1:1 conversation. Reloads history from the database and re-reads it on
@@ -159,7 +160,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
           ),
-          _Composer(controller: _input, onSend: _send),
+          Composer(controller: _input, onSend: _send),
         ],
       ),
     );
@@ -194,62 +195,6 @@ class _OfflineBanner extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Composer extends StatelessWidget {
-  const _Composer({required this.controller, required this.onSend});
-
-  final TextEditingController controller;
-  final Future<void> Function() onSend;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            Expanded(
-              child: TextField(
-                controller: controller,
-                minLines: 1,
-                maxLines: 5,
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => onSend(),
-                decoration: const InputDecoration(
-                  hintText: 'Message',
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Material(
-              color: scheme.primary,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onSend,
-                child: Padding(
-                  padding: const EdgeInsets.all(13),
-                  child: Icon(
-                    Icons.arrow_upward_rounded,
-                    color: scheme.onPrimary,
-                    size: 22,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

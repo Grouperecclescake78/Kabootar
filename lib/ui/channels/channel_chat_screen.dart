@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/channel.dart';
@@ -9,6 +10,7 @@ import '../widgets/empty_state.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/message_bubble.dart';
 import '../chat/message_info_sheet.dart';
+import '../chat/composer.dart';
 
 /// A broadcast channel conversation. Messages are flooded to everyone nearby
 /// who has joined the same channel. Incoming bubbles are labelled with who sent
@@ -72,6 +74,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     await _reload();
   }
 
+  void _shareCode() {
+    Clipboard.setData(ClipboardData(text: widget.channel.code));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Code ${widget.channel.code} copied. Share it so others can join.',
+        ),
+      ),
+    );
+  }
+
   Future<void> _leave() async {
     final bool? ok = await showDialog<bool>(
       context: context,
@@ -79,7 +92,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         title: Text('Leave ${widget.channel.display}?'),
         content: const Text(
           'You will stop receiving messages from this channel. You can rejoin '
-          'any time by its name.',
+          'any time with its code.',
         ),
         actions: <Widget>[
           TextButton(
@@ -121,7 +134,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
-                    widget.channel.name,
+                    widget.channel.display,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -129,7 +142,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    '${service.onlinePeerCount} nearby · broadcast channel',
+                    'Code ${widget.channel.code} · ${service.onlinePeerCount} nearby',
                     style: TextStyle(
                       fontSize: 12,
                       color: Theme.of(
@@ -143,11 +156,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           ],
         ),
         actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.ios_share, size: 20),
+            tooltip: 'Share code',
+            onPressed: _shareCode,
+          ),
           PopupMenuButton<String>(
             onSelected: (String v) {
               if (v == 'leave') _leave();
+              if (v == 'code') _shareCode();
             },
             itemBuilder: (BuildContext ctx) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'code',
+                child: Text('Copy channel code'),
+              ),
               const PopupMenuItem<String>(
                 value: 'leave',
                 child: Text('Leave channel'),
@@ -165,8 +188,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     icon: Icons.campaign_outlined,
                     title: 'Welcome to ${widget.channel.display}',
                     message:
-                        'Anyone nearby who joins "${widget.channel.name}" will '
-                        'see what you post here. Say something!',
+                        'Share the code ${widget.channel.code} so others can '
+                        'join. Anyone nearby who enters it sees what you post '
+                        'here. Say something!',
                   )
                 : ListView.builder(
                     controller: _scroll,
@@ -184,64 +208,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     },
                   ),
           ),
-          _Composer(controller: _input, onSend: _send),
+          Composer(
+              controller: _input, onSend: _send, hint: 'Message the channel'),
         ],
-      ),
-    );
-  }
-}
-
-class _Composer extends StatelessWidget {
-  const _Composer({required this.controller, required this.onSend});
-
-  final TextEditingController controller;
-  final Future<void> Function() onSend;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            Expanded(
-              child: TextField(
-                controller: controller,
-                minLines: 1,
-                maxLines: 5,
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => onSend(),
-                decoration: const InputDecoration(
-                  hintText: 'Message the channel',
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Material(
-              color: scheme.primary,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onSend,
-                child: Padding(
-                  padding: const EdgeInsets.all(13),
-                  child: Icon(
-                    Icons.arrow_upward_rounded,
-                    color: scheme.onPrimary,
-                    size: 22,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

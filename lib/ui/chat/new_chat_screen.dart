@@ -7,6 +7,7 @@ import '../../services/chat_service.dart';
 import '../channels/channel_chat_screen.dart';
 import '../widgets/avatar.dart';
 import '../widgets/made_in_india.dart';
+import '../widgets/text_prompt.dart';
 import 'chat_screen.dart';
 
 /// The "New chat" screen, opened from the Chats FAB. Lets you start a note to
@@ -23,37 +24,35 @@ class NewChatScreen extends StatelessWidget {
   }
 
   Future<void> _newChannel(BuildContext context) async {
-    final TextEditingController ctrl = TextEditingController();
-    final String? name = await showDialog<String>(
-      context: context,
-      builder: (BuildContext ctx) => AlertDialog(
-        title: const Text('New channel'),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: const InputDecoration(
-            prefixText: '#',
-            hintText: 'e.g. campus, hostel-3, cricket',
-          ),
-          onSubmitted: (String v) => Navigator.pop(ctx, v),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text),
-            child: const Text('Join'),
-          ),
-        ],
-      ),
+    final String? name = await promptText(
+      context,
+      title: 'Create a channel',
+      hint: 'Channel name (e.g. Campus)',
+      message: 'You will get a code to share so others can join.',
+      confirmLabel: 'Create',
+      maxLength: 30,
     );
-    ctrl.dispose();
-    if (name == null || name.trim().isEmpty || !context.mounted) return;
-    final Channel channel =
-        await context.read<ChatService>().joinOrCreateChannel(name);
-    if (context.mounted) {
+    if (name == null || !context.mounted) return;
+    final Channel channel = await context.read<ChatService>().createChannel(
+          name,
+        );
+    if (context.mounted) _open(context, ChannelChatScreen(channel: channel));
+  }
+
+  Future<void> _joinChannel(BuildContext context) async {
+    final String? code = await promptText(
+      context,
+      title: 'Join a channel',
+      hint: 'ABC234',
+      message: 'Enter the code someone shared with you.',
+      confirmLabel: 'Join',
+      uppercase: true,
+      maxLength: 6,
+    );
+    if (code == null || code.trim().isEmpty || !context.mounted) return;
+    final Channel? channel =
+        await context.read<ChatService>().joinChannelByCode(code);
+    if (channel != null && context.mounted) {
       _open(context, ChannelChatScreen(channel: channel));
     }
   }
@@ -87,9 +86,15 @@ class NewChatScreen extends StatelessWidget {
           ),
           _ActionTile(
             icon: Icons.campaign_outlined,
-            title: 'New channel',
-            subtitle: 'A broadcast room anyone nearby can join by name',
+            title: 'Create a channel',
+            subtitle: 'A broadcast room; you get a code to share',
             onTap: () => _newChannel(context),
+          ),
+          _ActionTile(
+            icon: Icons.tag,
+            title: 'Join a channel',
+            subtitle: 'Enter a code someone shared with you',
+            onTap: () => _joinChannel(context),
           ),
           const Divider(height: 8),
           Padding(

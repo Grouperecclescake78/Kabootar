@@ -42,44 +42,55 @@ class _DidYouKnowStripState extends State<DidYouKnowStrip> {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
+      // Fixed height for two lines, so the strip never jumps as facts of
+      // different lengths rotate through.
+      height: 50,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
         border: const Border(
           left: BorderSide(color: Tiranga.saffron, width: 3),
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           const Icon(Icons.lightbulb_outline, size: 15, color: Tiranga.green),
           const SizedBox(width: 8),
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 450),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (Widget child, Animation<double> anim) {
-                // Slide up + fade so the change is clearly visible.
-                return FadeTransition(
-                  opacity: anim,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.6),
-                      end: Offset.zero,
-                    ).animate(anim),
-                    child: child,
+            child: ClipRect(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 450),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (Widget child, Animation<double> anim) {
+                  return FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.5),
+                        end: Offset.zero,
+                      ).animate(anim),
+                      child: child,
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  key: ValueKey<int>(_i),
+                  height: 34,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      widget.facts[_i],
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        height: 1.35,
+                        color: scheme.onSurface.withValues(alpha: 0.75),
+                      ),
+                    ),
                   ),
-                );
-              },
-              child: Text(
-                widget.facts[_i],
-                key: ValueKey<int>(_i),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  height: 1.35,
-                  color: scheme.onSurface.withValues(alpha: 0.75),
                 ),
               ),
             ),

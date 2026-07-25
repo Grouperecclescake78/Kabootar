@@ -21,20 +21,7 @@ class ChatsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final ChatService service = context.watch<ChatService>();
 
-    final List<Contact> withChats = <Contact>[
-      // The "Message yourself" conversation shows up once it has any notes.
-      if (service.latestWith(service.identity.appId) != null)
-        service.selfContact,
-      ...service.contacts.where(
-        (Contact c) =>
-            !service.isSelf(c.appId) && service.latestWith(c.appId) != null,
-      ),
-    ]..sort(
-        (Contact a, Contact b) => service
-            .latestWith(b.appId)!
-            .timestamp
-            .compareTo(service.latestWith(a.appId)!.timestamp),
-      );
+    final List<Contact> withChats = service.conversationContacts();
 
     if (withChats.isEmpty) {
       return const Column(

@@ -56,8 +56,8 @@ abstract class Civic {
         'later, when the recipient comes back in range.',
     'No SIM and no internet needed: Bluetooth and Wi-Fi carry your message '
         'directly between phones.',
-    'Start a group by name: anyone nearby who joins the same channel name '
-        'lands in the same room, no invite links.',
+    'Create a channel and share its short code; anyone nearby who enters the '
+        'code joins the same room, no servers, no links.',
     'The Eighth Schedule of the Constitution recognises 22 official '
         'languages of India.',
     'Every message carries a hop limit, so it spreads only as far as it '

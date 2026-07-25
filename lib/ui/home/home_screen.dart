@@ -8,6 +8,7 @@ import '../channels/channel_chat_screen.dart';
 import '../channels/channels_tab.dart';
 import '../chat/chat_screen.dart';
 import '../chat/new_chat_screen.dart';
+import '../widgets/avatar.dart';
 import '../widgets/chakra.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/mesh_status_pill.dart';
@@ -73,10 +74,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.account_circle_outlined),
-            onPressed: () => showProfileSheet(context),
-            tooltip: 'Profile',
+          Padding(
+            padding: const EdgeInsets.only(right: 14, left: 4),
+            child: GestureDetector(
+              onTap: () => showProfileSheet(context),
+              child: Avatar(
+                initials: service.selfContact.initials,
+                seed: service.identity.appId,
+                radius: 17,
+              ),
+            ),
           ),
         ],
         bottom: const TricolorLine(),

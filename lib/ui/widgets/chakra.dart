@@ -12,17 +12,22 @@ import 'made_in_india.dart';
 /// whose use is reserved for government authorities under the State Emblem of
 /// India (Prohibition of Improper Use) Act, 2005.
 class Chakra extends StatelessWidget {
-  const Chakra({this.size = 72, this.color = Tiranga.chakra, super.key});
+  const Chakra({this.size = 72, this.color, super.key});
 
   final double size;
-  final Color color;
+
+  /// Override colour. When null, adapts to the theme: navy on light surfaces,
+  /// a light indigo on dark surfaces so the wheel is always visible.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final bool dark = Theme.of(context).brightness == Brightness.dark;
+    final Color c = color ?? (dark ? const Color(0xFFA5B4FC) : Tiranga.chakra);
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: _ChakraPainter(color)),
+      child: CustomPaint(painter: _ChakraPainter(c)),
     );
   }
 }

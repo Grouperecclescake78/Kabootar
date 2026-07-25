@@ -106,6 +106,41 @@ class ChatService extends ChangeNotifier
         lastSeen: _nowMs(),
       );
 
+  /// The 1:1 (and self) conversations to show in the Chats list, newest first.
+  /// Driven by stored messages, so a conversation stays put even after the
+  /// other person disconnects or the app restarts.
+  List<Contact> conversationContacts() {
+    final List<Contact> out = <Contact>[];
+    for (final MapEntry<String, Message> e in _latestPerPeer.entries) {
+      final String id = e.key;
+      if (_engine.groupIds.contains(id)) continue; // channels: own tab
+      if (id == identity.appId) {
+        out.add(selfContact);
+        continue;
+      }
+      Contact? known;
+      for (final Contact c in _contactList) {
+        if (c.appId == id) {
+          known = c;
+          break;
+        }
+      }
+      out.add(
+        known ??
+            Contact(
+                appId: id, name: senderLabel(id), lastSeen: e.value.timestamp),
+      );
+    }
+    out.sort(
+      (Contact a, Contact b) => latestWith(
+        b.appId,
+      )!
+          .timestamp
+          .compareTo(latestWith(a.appId)!.timestamp),
+    );
+    return out;
+  }
+
   /// Display name for a message sender in a channel: the contact's name if we
   /// know them, our own 'You', or a short id fallback.
   String senderLabel(String appId) {
@@ -155,23 +190,34 @@ class ChatService extends ChangeNotifier
 
   // --- Channels (broadcast groups) -----------------------------------------
 
-  /// Join a channel by name, creating it locally if new. The id is derived
-  /// deterministically from the name, so anyone who joins the same name lands
-  /// in the same room. Returns the channel.
-  Future<Channel> joinOrCreateChannel(String name) async {
-    final String clean = name.trim().replaceAll(RegExp(r'^#+'), '').trim();
+  /// Create a new channel with a fresh random code. Share the code so others
+  /// can join.
+  Future<Channel> createChannel(String name) async {
     final Channel channel = Channel(
-      id: Channel.idForName(clean),
-      name: clean,
+      id: Channel.idForCode(Channel.generateCode()),
+      name: name.trim(),
       joinedAt: _nowMs(),
     );
+    await _addChannel(channel);
+    return channel;
+  }
+
+  /// Join an existing channel by its code. Returns null if the code is empty.
+  Future<Channel?> joinChannelByCode(String code) async {
+    final String id = Channel.idForCode(code);
+    if (id == 'ch_') return null; // no usable characters
+    final Channel channel = Channel(id: id, name: '', joinedAt: _nowMs());
+    await _addChannel(channel);
+    return channel;
+  }
+
+  Future<void> _addChannel(Channel channel) async {
     await _channels.upsert(channel);
     _engine.groupIds.add(channel.id);
     _channelList
       ..removeWhere((Channel c) => c.id == channel.id)
       ..insert(0, channel);
     notifyListeners();
-    return channel;
   }
 
   Future<void> leaveChannel(String id) async {
@@ -217,15 +263,20 @@ class ChatService extends ChangeNotifier
   /// persist a row with the same id so an incoming ack can flip it to
   /// delivered.
   Future<Message> send({required String toId, required String body}) async {
-    // "Message yourself" is a purely local note: never floods the mesh.
+    // "Message yourself" is a purely local note: never floods the mesh. You are
+    // both sender and reader, so it is delivered and read the instant it is
+    // saved (blue double ticks).
     if (toId == identity.appId) {
+      final int now = _nowMs();
       final Message note = Message(
         id: _uuid.v4(),
         peerId: identity.appId,
         body: body,
         direction: MessageDirection.outgoing,
-        status: MessageStatus.sent,
-        timestamp: _nowMs(),
+        status: MessageStatus.read,
+        timestamp: now,
+        deliveredAt: now,
+        readAt: now,
       );
       await _messages.upsert(note);
       _latestPerPeer[identity.appId] = note;
