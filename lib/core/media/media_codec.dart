@@ -34,6 +34,12 @@ abstract class MediaCodec {
   }) =>
       _resizeJpeg(input, maxDim, quality) ?? input;
 
+  /// Compress the image and make its thumbnail in one call, so the whole job
+  /// can run in a background isolate via `compute()` (decoding a large photo is
+  /// CPU-heavy and would otherwise jank the UI). Returns `[full, thumbnail]`.
+  static List<Uint8List> imageAndThumb(Uint8List input) =>
+      <Uint8List>[compressImage(input), thumbnail(input)];
+
   static Uint8List? _resizeJpeg(Uint8List input, int maxDim, int quality) {
     final img.Image? decoded = img.decodeImage(input);
     if (decoded == null) return null;

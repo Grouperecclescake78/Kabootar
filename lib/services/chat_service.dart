@@ -718,22 +718,25 @@ class ChatService extends ChangeNotifier
     return d;
   }
 
-  /// Send a picked image: compress it and make a thumbnail, then hand it to the
-  /// shared media path (encrypt, chunk, flood).
+  /// Send a picked image: compress it and make a thumbnail (in a background
+  /// isolate, so decoding a large photo does not jank the UI), then hand it to
+  /// the shared media path (encrypt, chunk, flood).
   Future<void> sendImage({
     required String convId,
     required Uint8List bytes,
     String name = 'photo.jpg',
-  }) =>
-      _sendMedia(
-        convId: convId,
-        kind: 'image',
-        name: name,
-        mime: 'image/jpeg',
-        fileBytes: MediaCodec.compressImage(bytes),
-        thumbBytes: MediaCodec.thumbnail(bytes),
-        ext: 'jpg',
-      );
+  }) async {
+    final List<Uint8List> out = await compute(MediaCodec.imageAndThumb, bytes);
+    await _sendMedia(
+      convId: convId,
+      kind: 'image',
+      name: name,
+      mime: 'image/jpeg',
+      fileBytes: out[0],
+      thumbBytes: out[1],
+      ext: 'jpg',
+    );
+  }
 
   /// Send an arbitrary file over the same chunked media path (no compression or
   /// thumbnail).
