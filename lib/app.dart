@@ -15,39 +15,20 @@ import 'ui/onboarding/onboarding_screen.dart';
 import 'ui/widgets/chakra.dart';
 import 'ui/widgets/made_in_india.dart';
 
-/// Root widget. Owns the async bootstrap (database + identity), routes between
-/// onboarding and the live session, and provides the [ChatService] to the tree.
-class StudchatApp extends StatelessWidget {
+/// Root widget. Owns the async bootstrap (database + identity) and, crucially,
+/// provides the [ChatService] **above** [MaterialApp] so every pushed route
+/// (chats, channels, new-chat) can read it, not just the home screen.
+class StudchatApp extends StatefulWidget {
   const StudchatApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Studchat',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
-      home: const _Bootstrap(),
-    );
-  }
+  State<StudchatApp> createState() => _StudchatAppState();
 }
 
-class _Bootstrap extends StatefulWidget {
-  const _Bootstrap();
-
-  @override
-  State<_Bootstrap> createState() => _BootstrapState();
-}
-
-class _BootstrapState extends State<_Bootstrap> {
-  late Future<_Boot> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _future = _load();
-  }
+class _StudchatAppState extends State<StudchatApp> {
+  late final Future<_Boot> _bootFuture = _load();
+  ChatService? _service;
+  bool _onboarded = false;
 
   Future<_Boot> _load() async {
     final IdentityStore store = await IdentityStore.create();
@@ -56,86 +37,74 @@ class _BootstrapState extends State<_Bootstrap> {
     return _Boot(store, db, identity);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<_Boot>(
-      future: _future,
-      builder: (BuildContext context, AsyncSnapshot<_Boot> snap) {
-        if (!snap.hasData) return const _Splash();
-        final _Boot boot = snap.data!;
-        if (boot.identity.name.trim().isEmpty) {
-          return OnboardingScreen(
-            onComplete: (String name) async {
-              await boot.store.setName(name);
-              setState(() {
-                _future = Future<_Boot>.value(
-                  _Boot(
-                    boot.store,
-                    boot.db,
-                    boot.identity.copyWith(name: name),
-                  ),
-                );
-              });
-            },
-          );
-        }
-        return _Session(boot: boot);
-      },
+  ChatService _makeService(_Boot boot) {
+    final ChatService service = ChatService(
+      identity: boot.identity,
+      database: boot.db,
+      identityStore: boot.store,
     );
-  }
-}
-
-/// Live session: builds and starts the [ChatService], requests radio
-/// permissions, and hosts the home screen.
-class _Session extends StatefulWidget {
-  const _Session({required this.boot});
-  final _Boot boot;
-
-  @override
-  State<_Session> createState() => _SessionState();
-}
-
-class _SessionState extends State<_Session> {
-  late final ChatService _service;
-
-  @override
-  void initState() {
-    super.initState();
-    _service = ChatService(
-      identity: widget.boot.identity,
-      database: widget.boot.db,
-      identityStore: widget.boot.store,
-    );
-    // Start the mesh in the background so the UI appears instantly; the lists
-    // fill in as discovery and history-load complete (via notifyListeners).
-    unawaited(_start());
-  }
-
-  Future<void> _start() async {
-    await requestMeshPermissions();
-    await _service.start();
+    // Start the mesh in the background so the UI appears instantly.
+    unawaited(() async {
+      await requestMeshPermissions();
+      await service.start();
+    }());
+    return service;
   }
 
   @override
   void dispose() {
-    _service.dispose();
+    _service?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<ChatService>.value(
-      value: _service,
-      child: const HomeScreen(),
+    return FutureBuilder<_Boot>(
+      future: _bootFuture,
+      builder: (BuildContext context, AsyncSnapshot<_Boot> snap) {
+        if (!snap.hasData) return _app(const _Splash());
+        final _Boot boot = snap.data!;
+
+        final bool onboarded =
+            _onboarded || boot.identity.name.trim().isNotEmpty;
+        if (!onboarded) {
+          return _app(
+            OnboardingScreen(
+              onComplete: (String name) async {
+                await boot.store.setName(name);
+                boot.identity = boot.identity.copyWith(name: name);
+                setState(() => _onboarded = true);
+              },
+            ),
+          );
+        }
+
+        // Create the service once, and provide it ABOVE MaterialApp so pushed
+        // routes can access it too.
+        _service ??= _makeService(boot);
+        return ChangeNotifierProvider<ChatService>.value(
+          value: _service!,
+          child: _app(const HomeScreen()),
+        );
+      },
     );
   }
+
+  Widget _app(Widget home) => MaterialApp(
+    title: 'Studchat',
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.light,
+    darkTheme: AppTheme.dark,
+    themeMode: ThemeMode.system,
+    home: home,
+  );
 }
 
 class _Boot {
   _Boot(this.store, this.db, this.identity);
   final IdentityStore store;
   final AppDatabase db;
-  final Identity identity;
+  Identity identity;
 }
 
 class _Splash extends StatelessWidget {
@@ -169,9 +138,9 @@ class _Splash extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(
-                        alpha: 0.6,
-                      ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 40),
@@ -196,10 +165,9 @@ class _Splash extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12.5,
                         height: 1.45,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
