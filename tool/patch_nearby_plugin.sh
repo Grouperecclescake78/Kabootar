@@ -30,7 +30,7 @@ fi
 
 echo "==> Locating flutter_nearby_connections in the pub cache."
 CACHE="${PUB_CACHE:-$HOME/.pub-cache}"
-PLUGIN="$(find "$CACHE" -type d -path '*flutter_nearby_connections-*/android' 2>/dev/null | head -1 || true)"
+PLUGIN="$(find "$CACHE" -type d -path '*flutter_nearby_connections-*/android' -not -path '*/example/*' 2>/dev/null | head -1 || true)"
 if [[ -z "${PLUGIN:-}" ]]; then
   echo "!! flutter_nearby_connections not found in $CACHE. Run 'flutter pub get' first." >&2
   exit 1
