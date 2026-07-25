@@ -20,8 +20,7 @@ class IdentityStore {
       IdentityStore(await SharedPreferences.getInstance());
 
   /// Whether onboarding has been completed (a display name is set).
-  bool get isOnboarded =>
-      (_prefs.getString(_kName) ?? '').trim().isNotEmpty;
+  bool get isOnboarded => (_prefs.getString(_kName) ?? '').trim().isNotEmpty;
 
   /// Return the existing identity, minting a stable `appId` if this is the
   /// first launch. [name] may still be empty until onboarding sets it.

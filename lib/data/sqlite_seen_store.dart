@@ -26,15 +26,18 @@ class SqliteSeenStore implements SeenStore {
 
   @override
   Future<void> markSeen(String envelopeId, int ts) async {
-    await _db.insert(
-      'seen',
-      <String, Object?>{'id': envelopeId, 'ts': ts},
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await _db.insert('seen', <String, Object?>{
+      'id': envelopeId,
+      'ts': ts,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   @override
   Future<void> prune(int olderThanTs) async {
-    await _db.delete('seen', where: 'ts < ?', whereArgs: <Object?>[olderThanTs]);
+    await _db.delete(
+      'seen',
+      where: 'ts < ?',
+      whereArgs: <Object?>[olderThanTs],
+    );
   }
 }

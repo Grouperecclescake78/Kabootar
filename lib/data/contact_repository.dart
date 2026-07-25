@@ -15,15 +15,11 @@ class ContactRepository {
     required String name,
     required int lastSeen,
   }) async {
-    await _db.insert(
-      'contacts',
-      <String, Object?>{
-        'app_id': appId,
-        'name': name,
-        'last_seen': lastSeen,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await _db.insert('contacts', <String, Object?>{
+      'app_id': appId,
+      'name': name,
+      'last_seen': lastSeen,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> touch(String appId, int lastSeen) async {
@@ -46,8 +42,10 @@ class ContactRepository {
   }
 
   Future<List<Contact>> all() async {
-    final List<Map<String, Object?>> rows =
-        await _db.query('contacts', orderBy: 'last_seen DESC');
+    final List<Map<String, Object?>> rows = await _db.query(
+      'contacts',
+      orderBy: 'last_seen DESC',
+    );
     return rows.map(Contact.fromRow).toList();
   }
 }

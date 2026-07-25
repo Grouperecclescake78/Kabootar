@@ -7,19 +7,24 @@ import 'support/in_memory_mesh.dart';
 
 void main() {
   group('MeshEngine - delivery', () {
-    test('delivers a message and returns an end-to-end ack (A <-> B)', () async {
-      final MeshNetwork net = MeshNetwork();
-      net.add('A');
-      net.add('B');
-      net.connect('A', 'B');
+    test(
+      'delivers a message and returns an end-to-end ack (A <-> B)',
+      () async {
+        final MeshNetwork net = MeshNetwork();
+        net.add('A');
+        net.add('B');
+        net.connect('A', 'B');
 
-      final Envelope sent =
-          await net.nodes['A']!.engine.sendMessage(toId: 'B', body: 'hey');
-      await net.pump();
+        final Envelope sent = await net.nodes['A']!.engine.sendMessage(
+          toId: 'B',
+          body: 'hey',
+        );
+        await net.pump();
 
-      expect(net.nodes['B']!.delegate.delivered.single.body, 'hey');
-      expect(net.nodes['A']!.delegate.acked, contains(sent.id));
-    });
+        expect(net.nodes['B']!.delegate.delivered.single.body, 'hey');
+        expect(net.nodes['A']!.delegate.acked, contains(sent.id));
+      },
+    );
 
     test('never delivers the same envelope twice (de-dup)', () async {
       final MeshNetwork net = MeshNetwork();
@@ -54,8 +59,10 @@ void main() {
       net.connect('A', 'R');
       net.connect('R', 'C');
 
-      final Envelope sent =
-          await net.nodes['A']!.engine.sendMessage(toId: 'C', body: 'via relay');
+      final Envelope sent = await net.nodes['A']!.engine.sendMessage(
+        toId: 'C',
+        body: 'via relay',
+      );
       await net.pump();
 
       expect(net.nodes['C']!.delegate.delivered.single.body, 'via relay');
@@ -64,33 +71,40 @@ void main() {
       expect(net.nodes['A']!.delegate.acked, contains(sent.id));
     });
 
-    test('store-and-forward: offline recipient receives after returning',
-        () async {
-      final MeshNetwork net = MeshNetwork();
-      net.add('A');
-      final Node r = net.add('R');
-      net.add('C');
+    test(
+      'store-and-forward: offline recipient receives after returning',
+      () async {
+        final MeshNetwork net = MeshNetwork();
+        net.add('A');
+        final Node r = net.add('R');
+        net.add('C');
 
-      net.connect('A', 'R');
-      final Envelope sent = await net.nodes['A']!.engine
-          .sendMessage(toId: 'C', body: 'catch me later');
-      await net.pump();
+        net.connect('A', 'R');
+        final Envelope sent = await net.nodes['A']!.engine.sendMessage(
+          toId: 'C',
+          body: 'catch me later',
+        );
+        await net.pump();
 
-      expect(net.nodes['C']!.delegate.delivered, isEmpty);
-      expect(r.engine.carriedCount, greaterThanOrEqualTo(1));
+        expect(net.nodes['C']!.delegate.delivered, isEmpty);
+        expect(r.engine.carriedCount, greaterThanOrEqualTo(1));
 
-      net.disconnect('A', 'R');
-      net.advanceClock(60000);
-      net.connect('R', 'C'); // flush-on-connect carries the last hop
-      await net.pump();
+        net.disconnect('A', 'R');
+        net.advanceClock(60000);
+        net.connect('R', 'C'); // flush-on-connect carries the last hop
+        await net.pump();
 
-      expect(net.nodes['C']!.delegate.delivered.single.body, 'catch me later');
+        expect(
+          net.nodes['C']!.delegate.delivered.single.body,
+          'catch me later',
+        );
 
-      net.disconnect('R', 'C');
-      net.connect('A', 'R'); // ack finds its way home
-      await net.pump();
-      expect(net.nodes['A']!.delegate.acked, contains(sent.id));
-    });
+        net.disconnect('R', 'C');
+        net.connect('A', 'R'); // ack finds its way home
+        await net.pump();
+        expect(net.nodes['A']!.delegate.acked, contains(sent.id));
+      },
+    );
 
     test('seeing an ack stops a relay from carrying the message', () async {
       final MeshNetwork net = MeshNetwork();
@@ -103,7 +117,10 @@ void main() {
       await net.nodes['A']!.engine.sendMessage(toId: 'C', body: 'clean up');
       await net.pump();
 
-      expect(r.delegate.count(MeshEventType.carryCleared), greaterThanOrEqualTo(1));
+      expect(
+        r.delegate.count(MeshEventType.carryCleared),
+        greaterThanOrEqualTo(1),
+      );
     });
   });
 
@@ -134,8 +151,10 @@ void main() {
 
     test('carry-cache evicts the oldest past capacity', () async {
       final MeshNetwork net = MeshNetwork();
-      final Node r = net.add('R',
-          config: const MeshConfig(ttl: 8, maxCacheSize: 3));
+      final Node r = net.add(
+        'R',
+        config: const MeshConfig(ttl: 8, maxCacheSize: 3),
+      );
       for (int i = 0; i < 5; i++) {
         await r.engine.onEnvelopeReceived(
           Envelope(
@@ -154,37 +173,41 @@ void main() {
       expect(r.delegate.count(MeshEventType.cacheEvicted), 2);
     });
 
-    test('housekeeping ages out stale carried envelopes and seen records',
-        () async {
-      final MeshNetwork net = MeshNetwork();
-      final Node r = net.add('R',
+    test(
+      'housekeeping ages out stale carried envelopes and seen records',
+      () async {
+        final MeshNetwork net = MeshNetwork();
+        final Node r = net.add(
+          'R',
           config: const MeshConfig(
             ttl: 8,
             maxAgeMs: 10000,
             seenRetentionMs: 20000,
-          ));
-      await r.engine.onEnvelopeReceived(
-        Envelope(
-          id: 'old',
-          kind: EnvelopeKind.msg,
-          fromId: 'A',
-          toId: 'Z',
-          body: 'stale',
-          ts: net.clock,
-          ttl: 4,
-        ),
-        fromPeerId: 'A',
-      );
-      expect(r.engine.carriedCount, 1);
+          ),
+        );
+        await r.engine.onEnvelopeReceived(
+          Envelope(
+            id: 'old',
+            kind: EnvelopeKind.msg,
+            fromId: 'A',
+            toId: 'Z',
+            body: 'stale',
+            ts: net.clock,
+            ttl: 4,
+          ),
+          fromPeerId: 'A',
+        );
+        expect(r.engine.carriedCount, 1);
 
-      net.advanceClock(11000);
-      await r.engine.housekeeping();
-      expect(r.engine.carriedCount, 0);
+        net.advanceClock(11000);
+        await r.engine.housekeeping();
+        expect(r.engine.carriedCount, 0);
 
-      net.advanceClock(30000);
-      await r.engine.housekeeping();
-      expect(r.seen.entries, isEmpty);
-    });
+        net.advanceClock(30000);
+        await r.engine.housekeeping();
+        expect(r.seen.entries, isEmpty);
+      },
+    );
   });
 
   group('MeshEngine - hello', () {

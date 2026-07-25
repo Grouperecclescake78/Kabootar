@@ -88,8 +88,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const SizedBox(height: 8),
               Row(
                 children: <Widget>[
-                  Icon(Icons.lock_outline,
-                      size: 14, color: scheme.onSurface.withValues(alpha: 0.5)),
+                  Icon(
+                    Icons.lock_outline,
+                    size: 14,
+                    color: scheme.onSurface.withValues(alpha: 0.5),
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(

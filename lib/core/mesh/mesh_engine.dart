@@ -32,11 +32,11 @@ class MeshEngine {
     required MeshClock clock,
     required IdGenerator newId,
     this.config = MeshConfig.defaults,
-  })  : _outbound = outbound,
-        _seen = seen,
-        _delegate = delegate,
-        _clock = clock,
-        _newId = newId;
+  }) : _outbound = outbound,
+       _seen = seen,
+       _delegate = delegate,
+       _clock = clock,
+       _newId = newId;
 
   /// This device's stable app id. Messages are addressed to app ids, never to
   /// transport links.

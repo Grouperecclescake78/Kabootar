@@ -35,7 +35,9 @@ class PeopleTab extends StatelessWidget {
       );
     }
 
-    final int online = people.where((Contact c) => service.isOnline(c.appId)).length;
+    final int online = people
+        .where((Contact c) => service.isOnline(c.appId))
+        .length;
 
     return Column(
       children: <Widget>[
@@ -73,15 +75,16 @@ class PeopleTab extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 subtitle: Text(
-                  isOnline ? 'In range now' : 'Last seen ${relativeTime(c.lastSeen)}',
+                  isOnline
+                      ? 'In range now'
+                      : 'Last seen ${relativeTime(c.lastSeen)}',
                   style: TextStyle(
                     fontSize: 13,
                     color: isOnline
                         ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.5),
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
                 trailing: const Icon(Icons.chevron_right, size: 20),

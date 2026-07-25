@@ -76,7 +76,8 @@ class _Outbound implements MeshOutbound {
   }
 
   @override
-  void sendTo(String peerId, Envelope e) => node.net._enqueue(peerId, e, node.id);
+  void sendTo(String peerId, Envelope e) =>
+      node.net._enqueue(peerId, e, node.id);
 }
 
 class _Frame {
@@ -108,8 +109,8 @@ class MeshNetwork {
 
   void disconnect(String a, String b) => _links.remove(_key(a, b));
 
-  Iterable<String> peersOf(String id) => nodes.keys.where(
-      (String o) => o != id && _links.contains(_key(id, o)));
+  Iterable<String> peersOf(String id) =>
+      nodes.keys.where((String o) => o != id && _links.contains(_key(id, o)));
 
   void _enqueue(String target, Envelope e, String from) =>
       _queue.add(_Frame(target, e, from));

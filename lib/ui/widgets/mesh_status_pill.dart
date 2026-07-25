@@ -19,15 +19,14 @@ class MeshStatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool live = online > 0;
     final Color dot = live ? AppColors.online : Colors.grey;
-    final String label = live
-        ? '$online nearby'
-        : 'No peers in range';
+    final String label = live ? '$online nearby' : 'No peers in range';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest
-            .withValues(alpha: 0.6),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -41,12 +40,15 @@ class MeshStatusPill extends StatelessWidget {
           ),
           if (carrying > 0) ...<Widget>[
             const SizedBox(width: 8),
-            Icon(Icons.inventory_2_outlined,
-                size: 13, color: AppColors.accent),
+            const Icon(
+              Icons.inventory_2_outlined,
+              size: 13,
+              color: AppColors.accent,
+            ),
             const SizedBox(width: 3),
             Text(
               '$carrying',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 color: AppColors.accent,
@@ -93,11 +95,11 @@ class _PulseDotState extends State<_PulseDot>
   }
 
   Widget _dot(double opacity) => Container(
-        width: 9,
-        height: 9,
-        decoration: BoxDecoration(
-          color: widget.color.withValues(alpha: opacity),
-          shape: BoxShape.circle,
-        ),
-      );
+    width: 9,
+    height: 9,
+    decoration: BoxDecoration(
+      color: widget.color.withValues(alpha: opacity),
+      shape: BoxShape.circle,
+    ),
+  );
 }

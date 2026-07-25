@@ -25,9 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
   static const List<String> _titles = <String>['Chats', 'People', 'Mesh'];
 
   void _openChat(Contact peer) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => ChatScreen(peer: peer)),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => ChatScreen(peer: peer)));
   }
 
   @override

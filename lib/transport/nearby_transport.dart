@@ -24,7 +24,7 @@ class NearbyTransport implements MeshTransport {
   final NearbyService _nearby = NearbyService();
   TransportListener? _listener;
 
-  StreamSubscription<List<Device>>? _stateSub;
+  StreamSubscription<dynamic>? _stateSub;
   StreamSubscription<dynamic>? _dataSub;
 
   /// deviceId -> its most recent known state, so we only fire connect/disconnect
@@ -38,7 +38,7 @@ class NearbyTransport implements MeshTransport {
     await _nearby.init(
       serviceType: serviceType,
       deviceName: deviceName,
-      strategy: Strategy.P2P_Cluster,
+      strategy: Strategy.P2P_CLUSTER,
       callback: (bool isRunning) async {
         if (!isRunning) return;
         await _nearby.stopAdvertisingPeer();
@@ -86,7 +86,7 @@ class NearbyTransport implements MeshTransport {
 
   void _onDataReceived(dynamic data) {
     // Plugin hands us a map: { 'deviceId': ..., 'message': ... }.
-    if (data is! Map) return;
+    if (data is! Map<dynamic, dynamic>) return;
     final Object? deviceId = data['deviceId'];
     final Object? message = data['message'];
     if (deviceId is String && message is String) {
@@ -97,8 +97,10 @@ class NearbyTransport implements MeshTransport {
   @override
   List<TransportPeer> get connectedPeers => _devices.values
       .where((Device d) => d.state == SessionState.connected)
-      .map((Device d) =>
-          TransportPeer(deviceId: d.deviceId, deviceName: d.deviceName))
+      .map(
+        (Device d) =>
+            TransportPeer(deviceId: d.deviceId, deviceName: d.deviceName),
+      )
       .toList(growable: false);
 
   @override

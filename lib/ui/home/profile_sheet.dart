@@ -71,8 +71,10 @@ class _ProfileSheetState extends State<_ProfileSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Display name',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          const Text(
+            'Display name',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 8),
           TextField(
             controller: _name,
@@ -81,24 +83,25 @@ class _ProfileSheetState extends State<_ProfileSheet> {
             decoration: const InputDecoration(counterText: ''),
           ),
           const SizedBox(height: 16),
-          const Text('Your mesh address',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          const Text(
+            'Your mesh address',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 8),
           InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
               Clipboard.setData(ClipboardData(text: appId));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Address copied')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Address copied')));
             },
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest
-                    .withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -107,7 +110,9 @@ class _ProfileSheetState extends State<_ProfileSheet> {
                     child: Text(
                       appId,
                       style: const TextStyle(
-                          fontSize: 12.5, fontFamily: 'monospace'),
+                        fontSize: 12.5,
+                        fontFamily: 'monospace',
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -123,8 +128,9 @@ class _ProfileSheetState extends State<_ProfileSheet> {
             style: TextStyle(
               fontSize: 12,
               height: 1.4,
-              color:
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 20),

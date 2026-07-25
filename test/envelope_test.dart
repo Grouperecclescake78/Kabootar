@@ -82,8 +82,9 @@ void main() {
     });
 
     test('tolerates a missing optional toId/body', () {
-      final Envelope e =
-          Envelope.decode('{"id":"x","k":"hello","f":"a","ts":1,"ttl":0}');
+      final Envelope e = Envelope.decode(
+        '{"id":"x","k":"hello","f":"a","ts":1,"ttl":0}',
+      );
       expect(e.toId, '');
       expect(e.body, '');
       expect(e.isHello, isTrue);

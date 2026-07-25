@@ -1,3 +1,7 @@
+// This is a standalone dev script, not part of the app: it prints to stdout and
+// imports lib/ by relative path so it can run under the bare Dart SDK (no pub).
+// ignore_for_file: avoid_print, avoid_relative_lib_imports
+
 // A dependency-free, runnable proof that the mesh engine routes correctly.
 //
 // It stands up an in-memory network of [MeshEngine]s wired together by a fake
@@ -76,7 +80,8 @@ class CollectingDelegate implements MeshDelegate {
   @override
   void onMeshEvent(MeshEvent event) => events.add(event);
 
-  int countOf(MeshEventType t) => events.where((MeshEvent e) => e.type == t).length;
+  int countOf(MeshEventType t) =>
+      events.where((MeshEvent e) => e.type == t).length;
 }
 
 /// A fake radio: an engine's outbound calls land in the network's queue, which
@@ -153,8 +158,8 @@ class Network {
   void disconnect(String a, String b) => _links.remove(_key(a, b));
 
   Iterable<String> peersOf(String id) => nodes.keys.where(
-        (String other) => other != id && _links.contains(_key(id, other)),
-      );
+    (String other) => other != id && _links.contains(_key(id, other)),
+  );
 
   void enqueue(String target, Envelope e, String from) =>
       _queue.add(_Frame(target, e, from));
@@ -186,16 +191,24 @@ Future<void> scenarioDirectDelivery() async {
   net.add('B');
   net.connect('A', 'B');
 
-  final Envelope sent =
-      await net.nodes['A']!.engine.sendMessage(toId: 'B', body: 'hey');
+  final Envelope sent = await net.nodes['A']!.engine.sendMessage(
+    toId: 'B',
+    body: 'hey',
+  );
   await net.pump();
 
-  check('B received exactly one message',
-      net.nodes['B']!.delegate.delivered.length == 1);
-  check('B received the right body',
-      net.nodes['B']!.delegate.delivered.first.body == 'hey');
-  check('A got a delivery ack for its message',
-      net.nodes['A']!.delegate.acked.contains(sent.id));
+  check(
+    'B received exactly one message',
+    net.nodes['B']!.delegate.delivered.length == 1,
+  );
+  check(
+    'B received the right body',
+    net.nodes['B']!.delegate.delivered.first.body == 'hey',
+  );
+  check(
+    'A got a delivery ack for its message',
+    net.nodes['A']!.delegate.acked.contains(sent.id),
+  );
 }
 
 Future<void> scenarioDedup() async {
@@ -218,10 +231,14 @@ Future<void> scenarioDedup() async {
   await b.engine.onEnvelopeReceived(e, fromPeerId: 'A'); // same id again
   await net.pump();
 
-  check('delivered only once despite two arrivals',
-      b.delegate.delivered.length == 1);
-  check('the duplicate was logged as dropped',
-      b.delegate.countOf(MeshEventType.duplicateDropped) == 1);
+  check(
+    'delivered only once despite two arrivals',
+    b.delegate.delivered.length == 1,
+  );
+  check(
+    'the duplicate was logged as dropped',
+    b.delegate.countOf(MeshEventType.duplicateDropped) == 1,
+  );
 }
 
 Future<void> scenarioMultiHopRelay() async {
@@ -234,16 +251,25 @@ Future<void> scenarioMultiHopRelay() async {
   net.connect('A', 'R');
   net.connect('R', 'C');
 
-  final Envelope sent =
-      await net.nodes['A']!.engine.sendMessage(toId: 'C', body: 'via relay');
+  final Envelope sent = await net.nodes['A']!.engine.sendMessage(
+    toId: 'C',
+    body: 'via relay',
+  );
   await net.pump();
 
-  check('C received the message', net.nodes['C']!.delegate.delivered.length == 1);
-  check('R relayed (carried) but never "delivered" to itself',
-      net.nodes['R']!.delegate.delivered.isEmpty &&
-          r.delegate.countOf(MeshEventType.relayed) > 0);
-  check('A got its ack back through R',
-      net.nodes['A']!.delegate.acked.contains(sent.id));
+  check(
+    'C received the message',
+    net.nodes['C']!.delegate.delivered.length == 1,
+  );
+  check(
+    'R relayed (carried) but never "delivered" to itself',
+    net.nodes['R']!.delegate.delivered.isEmpty &&
+        r.delegate.countOf(MeshEventType.relayed) > 0,
+  );
+  check(
+    'A got its ack back through R',
+    net.nodes['A']!.delegate.acked.contains(sent.id),
+  );
 }
 
 Future<void> scenarioStoreAndForward() async {
@@ -255,12 +281,16 @@ Future<void> scenarioStoreAndForward() async {
 
   // C is out of range entirely. A meets a courier R and hands off the message.
   net.connect('A', 'R');
-  final Envelope sent =
-      await net.nodes['A']!.engine.sendMessage(toId: 'C', body: 'catch me later');
+  final Envelope sent = await net.nodes['A']!.engine.sendMessage(
+    toId: 'C',
+    body: 'catch me later',
+  );
   await net.pump();
 
-  check('nobody delivered yet (C never in range)',
-      net.nodes['C']!.delegate.delivered.isEmpty);
+  check(
+    'nobody delivered yet (C never in range)',
+    net.nodes['C']!.delegate.delivered.isEmpty,
+  );
   check('R is carrying the message for later', r.engine.carriedCount >= 1);
 
   // A walks away; time passes; later R runs into C.
@@ -269,16 +299,20 @@ Future<void> scenarioStoreAndForward() async {
   net.connect('R', 'C'); // flush-on-connect carries it the last hop
   await net.pump();
 
-  check('C finally received it after coming back in range',
-      net.nodes['C']!.delegate.delivered.length == 1 &&
-          net.nodes['C']!.delegate.delivered.first.body == 'catch me later');
+  check(
+    'C finally received it after coming back in range',
+    net.nodes['C']!.delegate.delivered.length == 1 &&
+        net.nodes['C']!.delegate.delivered.first.body == 'catch me later',
+  );
 
   // And the ack survives the trip home the same way.
   net.disconnect('R', 'C');
   net.connect('A', 'R');
   await net.pump();
-  check('A eventually learns it was delivered',
-      net.nodes['A']!.delegate.acked.contains(sent.id));
+  check(
+    'A eventually learns it was delivered',
+    net.nodes['A']!.delegate.acked.contains(sent.id),
+  );
 }
 
 Future<void> scenarioTtlExpiry() async {
@@ -305,8 +339,10 @@ Future<void> scenarioTtlExpiry() async {
   await net.pump();
 
   check('R saw the message', r.delegate.countOf(MeshEventType.received) == 1);
-  check('R dropped it for expired TTL',
-      r.delegate.countOf(MeshEventType.ttlExpired) == 1);
+  check(
+    'R dropped it for expired TTL',
+    r.delegate.countOf(MeshEventType.ttlExpired) == 1,
+  );
   check('C never received it', net.nodes['C']!.delegate.delivered.isEmpty);
 }
 
@@ -323,15 +359,19 @@ Future<void> scenarioAckStopsCarry() async {
   await net.pump();
 
   check('C received', net.nodes['C']!.delegate.delivered.length == 1);
-  check('R stopped carrying the message once the ack passed back through',
-      r.delegate.countOf(MeshEventType.carryCleared) >= 1);
+  check(
+    'R stopped carrying the message once the ack passed back through',
+    r.delegate.countOf(MeshEventType.carryCleared) >= 1,
+  );
 }
 
 Future<void> scenarioCacheBounds() async {
   section('Carry-cache is bounded (oldest evicted past capacity)');
   final Network net = Network();
-  final Node r =
-      net.add('R', config: const MeshConfig(ttl: 8, maxCacheSize: 3));
+  final Node r = net.add(
+    'R',
+    config: const MeshConfig(ttl: 8, maxCacheSize: 3),
+  );
   // R relays 5 distinct messages for others; cache must cap at 3.
   for (int i = 0; i < 5; i++) {
     await r.engine.onEnvelopeReceived(
@@ -348,8 +388,10 @@ Future<void> scenarioCacheBounds() async {
     );
   }
   check('cache never exceeded capacity', r.engine.carriedCount == 3);
-  check('evictions were logged',
-      r.delegate.countOf(MeshEventType.cacheEvicted) == 2);
+  check(
+    'evictions were logged',
+    r.delegate.countOf(MeshEventType.cacheEvicted) == 2,
+  );
 }
 
 Future<void> scenarioHousekeeping() async {
@@ -357,7 +399,11 @@ Future<void> scenarioHousekeeping() async {
   final Network net = Network();
   final Node r = net.add(
     'R',
-    config: const MeshConfig(ttl: 8, maxAgeMs: 10 * 1000, seenRetentionMs: 20 * 1000),
+    config: const MeshConfig(
+      ttl: 8,
+      maxAgeMs: 10 * 1000,
+      seenRetentionMs: 20 * 1000,
+    ),
   );
   await r.engine.onEnvelopeReceived(
     Envelope(
@@ -407,8 +453,10 @@ Future<void> scenarioHello() async {
   await net.pump();
 
   check('B learned Alice as a contact', b.delegate.contacts['A'] == 'Alice');
-  check('hello was not relayed onward to C',
-      net.nodes['C']!.delegate.contacts.isEmpty);
+  check(
+    'hello was not relayed onward to C',
+    net.nodes['C']!.delegate.contacts.isEmpty,
+  );
 }
 
 Future<void> main() async {

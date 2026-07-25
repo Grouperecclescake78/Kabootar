@@ -59,8 +59,9 @@ class MeshTab extends StatelessWidget {
               '${service.activityLog.length} events',
               style: TextStyle(
                 fontSize: 12,
-                color:
-                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -73,18 +74,15 @@ class MeshTab extends StatelessWidget {
               child: Text(
                 'Nothing yet. Routing events appear here as messages flow.',
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ),
           )
         else
-          ...service.activityLog
-              .take(60)
-              .map((MeshEvent e) => _EventRow(e)),
+          ...service.activityLog.take(60).map((MeshEvent e) => _EventRow(e)),
       ],
     );
   }
@@ -129,8 +127,9 @@ class _StatCard extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12.5,
-              color:
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -217,9 +216,13 @@ class _Step extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13.5)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                  ),
+                ),
                 Text(
                   body,
                   style: TextStyle(
@@ -261,8 +264,9 @@ class _EventRow extends StatelessWidget {
             relativeTime(event.ts),
             style: TextStyle(
               fontSize: 11,
-              color:
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ),
         ],

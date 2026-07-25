@@ -22,13 +22,14 @@ abstract class AppTheme {
 
   static ThemeData _build(Brightness brightness) {
     final bool isDark = brightness == Brightness.dark;
-    final ColorScheme scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.brand,
-      brightness: brightness,
-    ).copyWith(
-      secondary: AppColors.accent,
-      surface: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-    );
+    final ColorScheme scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.brand,
+          brightness: brightness,
+        ).copyWith(
+          secondary: AppColors.accent,
+          surface: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        );
 
     final ThemeData base = ThemeData(
       useMaterial3: true,
@@ -62,8 +63,10 @@ abstract class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isDark ? AppColors.bubbleInDark : Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(26),
           borderSide: BorderSide.none,
@@ -83,10 +86,7 @@ abstract class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       dividerTheme: DividerThemeData(

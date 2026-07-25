@@ -160,7 +160,11 @@ class _Splash extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.hub_rounded, color: Colors.white, size: 36),
+              child: const Icon(
+                Icons.hub_rounded,
+                color: Colors.white,
+                size: 36,
+              ),
             ),
             const SizedBox(height: 22),
             const SizedBox(

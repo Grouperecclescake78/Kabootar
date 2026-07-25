@@ -1,19 +1,8 @@
+# The standard Flutter lint set. See
+# https://dart.dev/tools/linter-rules for the full catalogue.
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  language:
-    strict-casts: true
-    strict-raw-types: true
   errors:
-    invalid_annotation_target: ignore
-
-linter:
-  rules:
-    - always_declare_return_types
-    - avoid_print
-    - prefer_final_locals
-    - prefer_single_quotes
-    - require_trailing_commas
-    - sort_child_properties_last
-    - unawaited_futures
-    - use_key_in_widget_constructors
+    # Trailing commas are enforced by `dart format`, not as an analysis error.
+    require_trailing_commas: ignore

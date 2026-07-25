@@ -20,13 +20,16 @@ class ChatsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final ChatService service = context.watch<ChatService>();
 
-    final List<Contact> withChats = service.contacts
-        .where((Contact c) => service.latestWith(c.appId) != null)
-        .toList()
-      ..sort((Contact a, Contact b) => service
-          .latestWith(b.appId)!
-          .timestamp
-          .compareTo(service.latestWith(a.appId)!.timestamp));
+    final List<Contact> withChats =
+        service.contacts
+            .where((Contact c) => service.latestWith(c.appId) != null)
+            .toList()
+          ..sort(
+            (Contact a, Contact b) => service
+                .latestWith(b.appId)!
+                .timestamp
+                .compareTo(service.latestWith(a.appId)!.timestamp),
+          );
 
     if (withChats.isEmpty) {
       return const EmptyState(
@@ -60,10 +63,9 @@ class ChatsTab extends StatelessWidget {
               if (last.isOutgoing) ...<Widget>[
                 StatusTicks(
                   last.status,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
                 const SizedBox(width: 4),
               ],
@@ -73,10 +75,9 @@ class ChatsTab extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ),
@@ -86,8 +87,9 @@ class ChatsTab extends StatelessWidget {
             relativeTime(last.timestamp),
             style: TextStyle(
               fontSize: 12,
-              color:
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         );

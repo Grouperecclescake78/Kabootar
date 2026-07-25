@@ -42,8 +42,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _reload() async {
-    final List<Message> next =
-        await context.read<ChatService>().conversation(widget.peer.appId);
+    final List<Message> next = await context.read<ChatService>().conversation(
+      widget.peer.appId,
+    );
     if (!mounted) return;
     setState(() => _messages = next);
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToBottom());
@@ -91,7 +92,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 Text(
                   widget.peer.name,
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 Text(
                   online ? 'In range now' : 'Not in range',
@@ -99,10 +102,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     fontSize: 12,
                     color: online
                         ? AppColors.online
-                        : Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.5),
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -148,7 +150,11 @@ class _OfflineBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: <Widget>[
-          Icon(Icons.inventory_2_outlined, size: 15, color: AppColors.accent),
+          const Icon(
+            Icons.inventory_2_outlined,
+            size: 15,
+            color: AppColors.accent,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -191,8 +197,10 @@ class _Composer extends StatelessWidget {
                 onSubmitted: (_) => onSend(),
                 decoration: const InputDecoration(
                   hintText: 'Message',
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
@@ -205,8 +213,11 @@ class _Composer extends StatelessWidget {
                 onTap: onSend,
                 child: Padding(
                   padding: const EdgeInsets.all(13),
-                  child: Icon(Icons.arrow_upward_rounded,
-                      color: scheme.onPrimary, size: 22),
+                  child: Icon(
+                    Icons.arrow_upward_rounded,
+                    color: scheme.onPrimary,
+                    size: 22,
+                  ),
                 ),
               ),
             ),

@@ -30,11 +30,15 @@ class ChatService extends ChangeNotifier
     required IdentityStore identityStore,
     MeshTransport? transport,
     MeshConfig config = MeshConfig.defaults,
-  })  : _db = database,
-        _identityStore = identityStore,
-        _config = config {
-    _transport = transport ??
-        NearbyTransport(deviceName: _shortName(identity.name), serviceType: 'studchat');
+  }) : _db = database,
+       _identityStore = identityStore,
+       _config = config {
+    _transport =
+        transport ??
+        NearbyTransport(
+          deviceName: _shortName(identity.name),
+          serviceType: 'studchat',
+        );
     _messages = MessageRepository(database.db);
     _contacts = ContactRepository(database.db);
     _seen = SqliteSeenStore(database.db);
@@ -170,14 +174,18 @@ class ChatService extends ChangeNotifier
 
   @override
   Future<void> onAckReceived(String acknowledgedMessageId) async {
-    await _messages.updateStatus(acknowledgedMessageId, MessageStatus.delivered);
+    await _messages.updateStatus(
+      acknowledgedMessageId,
+      MessageStatus.delivered,
+    );
     final Message? current = _latestPerPeer.values
         .where((Message m) => m.id == acknowledgedMessageId)
         .cast<Message?>()
         .firstWhere((Message? m) => true, orElse: () => null);
     if (current != null) {
-      _latestPerPeer[current.peerId] =
-          current.copyWith(status: MessageStatus.delivered);
+      _latestPerPeer[current.peerId] = current.copyWith(
+        status: MessageStatus.delivered,
+      );
     }
     notifyListeners();
   }
@@ -238,25 +246,25 @@ class ChatService extends ChangeNotifier
   // -------------------------------------------------------------------------
 
   Envelope _helloEnvelope() => Envelope(
-        id: _uuid.v4(),
-        kind: EnvelopeKind.hello,
-        fromId: identity.appId,
-        toId: '',
-        body: '',
-        ts: _nowMs(),
-        ttl: 0,
-        name: identity.name,
-      );
+    id: _uuid.v4(),
+    kind: EnvelopeKind.hello,
+    fromId: identity.appId,
+    toId: '',
+    body: '',
+    ts: _nowMs(),
+    ttl: 0,
+    name: identity.name,
+  );
 
   Envelope _toEnvelope(Message m) => Envelope(
-        id: m.id,
-        kind: EnvelopeKind.msg,
-        fromId: identity.appId,
-        toId: m.peerId,
-        body: m.body,
-        ts: m.timestamp,
-        ttl: _config.ttl,
-      );
+    id: m.id,
+    kind: EnvelopeKind.msg,
+    fromId: identity.appId,
+    toId: m.peerId,
+    body: m.body,
+    ts: m.timestamp,
+    ttl: _config.ttl,
+  );
 
   Future<void> _refreshContacts() async {
     _contactList

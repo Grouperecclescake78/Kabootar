@@ -18,15 +18,15 @@ class StatusTicks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color base = color ??
-        Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.7);
+    final Color base =
+        color ?? Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.7);
     switch (status) {
       case MessageStatus.sending:
         return Icon(Icons.schedule, size: 14, color: base);
       case MessageStatus.sent:
         return Icon(Icons.done, size: 15, color: base);
       case MessageStatus.delivered:
-        return Icon(Icons.done_all, size: 15, color: AppColors.delivered);
+        return const Icon(Icons.done_all, size: 15, color: AppColors.delivered);
       case MessageStatus.failed:
         return Icon(Icons.error_outline, size: 14, color: Colors.red.shade300);
     }

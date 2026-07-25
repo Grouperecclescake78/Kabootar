@@ -44,29 +44,29 @@ class Message {
   bool get isIncoming => direction == MessageDirection.incoming;
 
   Message copyWith({MessageStatus? status}) => Message(
-        id: id,
-        peerId: peerId,
-        body: body,
-        direction: direction,
-        status: status ?? this.status,
-        timestamp: timestamp,
-      );
+    id: id,
+    peerId: peerId,
+    body: body,
+    direction: direction,
+    status: status ?? this.status,
+    timestamp: timestamp,
+  );
 
   Map<String, Object?> toRow() => <String, Object?>{
-        'id': id,
-        'peer_id': peerId,
-        'body': body,
-        'direction': direction.name,
-        'status': status.name,
-        'ts': timestamp,
-      };
+    'id': id,
+    'peer_id': peerId,
+    'body': body,
+    'direction': direction.name,
+    'status': status.name,
+    'ts': timestamp,
+  };
 
   static Message fromRow(Map<String, Object?> row) => Message(
-        id: row['id']! as String,
-        peerId: row['peer_id']! as String,
-        body: row['body']! as String,
-        direction: MessageDirection.values.byName(row['direction']! as String),
-        status: MessageStatus.values.byName(row['status']! as String),
-        timestamp: (row['ts']! as num).toInt(),
-      );
+    id: row['id']! as String,
+    peerId: row['peer_id']! as String,
+    body: row['body']! as String,
+    direction: MessageDirection.values.byName(row['direction']! as String),
+    status: MessageStatus.values.byName(row['status']! as String),
+    timestamp: (row['ts']! as num).toInt(),
+  );
 }
