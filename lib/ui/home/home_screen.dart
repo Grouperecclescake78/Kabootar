@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/models/contact.dart';
 import '../../services/chat_service.dart';
 import '../chat/chat_screen.dart';
+import '../widgets/chakra.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/mesh_status_pill.dart';
 import 'chats_tab.dart';
@@ -37,7 +38,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_tab]),
+        titleSpacing: 16,
+        title: Row(
+          children: <Widget>[
+            const Chakra(size: 24),
+            const SizedBox(width: 10),
+            Text(_titles[_tab]),
+          ],
+        ),
         actions: <Widget>[
           Padding(
             padding: const EdgeInsets.only(right: 8),

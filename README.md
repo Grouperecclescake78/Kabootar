@@ -4,6 +4,10 @@
 
 # studchat
 
+<img src="https://raw.githubusercontent.com/royalpinto007/studchat/main/docs/assets/flag.svg" width="132" alt="Flag of India" />
+
+**🇮🇳 Proudly Made in India**
+
 ### Chat that works with **no internet, no servers, no SIM.**
 
 Messages hop **phone-to-phone over Bluetooth and Wi-Fi** and are delivered
@@ -268,11 +272,16 @@ Contributions are welcome. Good first steps:
 By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 Security issues: see [SECURITY.md](SECURITY.md).
 
-## ⭐ Star history
+## ⭐ Star this project
 
-If studchat is useful or interesting, a star helps others find it.
+If studchat is useful or interesting, a star genuinely helps others find it.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=royalpinto007/studchat&type=Date)](https://star-history.com/#royalpinto007/studchat&Date)
+<a href="https://github.com/royalpinto007/studchat/stargazers">
+  <img src="https://img.shields.io/github/stars/royalpinto007/studchat?style=social" alt="GitHub stars" />
+</a>
+
+Once the project gathers a few stars, a growth chart will render here via
+[star-history.com](https://star-history.com/#royalpinto007/studchat&Date).
 
 ## 📄 License
 

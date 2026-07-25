@@ -6,7 +6,9 @@ import '../../core/models/message.dart';
 import '../../services/chat_service.dart';
 import '../../theme/app_theme.dart';
 import '../widgets/avatar.dart';
+import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/made_in_india.dart';
 import '../widgets/message_bubble.dart';
 
 /// A 1:1 conversation. Reloads history from the database and re-reads it on
@@ -76,6 +78,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
+        bottom: const TricolorLine(),
         title: Row(
           children: <Widget>[
             Avatar(
@@ -114,6 +117,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: <Widget>[
+          const DidYouKnowStrip(),
           if (!online) const _OfflineBanner(),
           Expanded(
             child: _messages.isEmpty

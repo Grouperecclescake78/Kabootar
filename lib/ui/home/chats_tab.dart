@@ -6,6 +6,7 @@ import '../../core/models/message.dart';
 import '../../services/chat_service.dart';
 import '../format.dart';
 import '../widgets/avatar.dart';
+import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/status_ticks.dart';
 
@@ -32,22 +33,33 @@ class ChatsTab extends StatelessWidget {
           );
 
     if (withChats.isEmpty) {
-      return const EmptyState(
-        icon: Icons.forum_outlined,
-        title: 'No conversations yet',
-        message:
-            'When someone comes into range, they appear under People. Start a '
-            'chat and it will show up here.',
+      return const Column(
+        children: <Widget>[
+          DidYouKnowStrip(),
+          Expanded(
+            child: EmptyState(
+              icon: Icons.forum_outlined,
+              title: 'No conversations yet',
+              message:
+                  'When someone comes into range, they appear under People. '
+                  'Start a chat and it will show up here.',
+            ),
+          ),
+        ],
       );
     }
 
-    return ListView.separated(
-      itemCount: withChats.length,
-      separatorBuilder: (_, __) => const Divider(indent: 80),
-      itemBuilder: (BuildContext context, int i) {
-        final Contact c = withChats[i];
-        final Message last = service.latestWith(c.appId)!;
-        return ListTile(
+    return Column(
+      children: <Widget>[
+        const DidYouKnowStrip(),
+        Expanded(
+          child: ListView.separated(
+            itemCount: withChats.length,
+            separatorBuilder: (_, __) => const Divider(indent: 80),
+            itemBuilder: (BuildContext context, int i) {
+              final Contact c = withChats[i];
+              final Message last = service.latestWith(c.appId)!;
+              return ListTile(
           onTap: () => onOpenChat(c),
           leading: Avatar(
             initials: c.initials,
@@ -92,8 +104,11 @@ class ChatsTab extends StatelessWidget {
               ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
-        );
-      },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +9,7 @@ import 'data/identity_store.dart';
 import 'permissions.dart';
 import 'services/chat_service.dart';
 import 'theme/app_theme.dart';
+import 'ui/about/civic_content.dart';
 import 'ui/home/home_screen.dart';
 import 'ui/onboarding/onboarding_screen.dart';
 import 'ui/widgets/chakra.dart';
@@ -94,7 +97,6 @@ class _Session extends StatefulWidget {
 
 class _SessionState extends State<_Session> {
   late final ChatService _service;
-  late final Future<void> _ready;
 
   @override
   void initState() {
@@ -104,10 +106,12 @@ class _SessionState extends State<_Session> {
       database: widget.boot.db,
       identityStore: widget.boot.store,
     );
-    _ready = _boot();
+    // Start the mesh in the background so the UI appears instantly; the lists
+    // fill in as discovery and history-load complete (via notifyListeners).
+    unawaited(_start());
   }
 
-  Future<void> _boot() async {
+  Future<void> _start() async {
     await requestMeshPermissions();
     await _service.start();
   }
@@ -120,17 +124,9 @@ class _SessionState extends State<_Session> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _ready,
-      builder: (BuildContext context, AsyncSnapshot<void> snap) {
-        if (snap.connectionState != ConnectionState.done) {
-          return const _Splash();
-        }
-        return ChangeNotifierProvider<ChatService>.value(
-          value: _service,
-          child: const HomeScreen(),
-        );
-      },
+    return ChangeNotifierProvider<ChatService>.value(
+      value: _service,
+      child: const HomeScreen(),
     );
   }
 }
@@ -147,30 +143,69 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Chakra(size: 88),
-            SizedBox(height: 22),
-            Text(
-              'studchat',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
+    final String fact = Civic.facts[DateTime.now().second % Civic.facts.length];
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 36),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Chakra(size: 88),
+              const SizedBox(height: 22),
+              const Text(
+                'studchat',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
-            SizedBox(height: 6),
-            TricolorBar(width: 90, height: 5),
-            SizedBox(height: 28),
-            SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.2),
-            ),
-          ],
+              const SizedBox(height: 8),
+              const TricolorBar(width: 90, height: 5),
+              const SizedBox(height: 10),
+              Text(
+                'Made in India 🇮🇳',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.2),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Icon(
+                    Icons.lightbulb_outline,
+                    size: 15,
+                    color: Tiranga.green,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      fact,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.45,
+                        color: Theme.of(context).colorScheme.onSurface
+                            .withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

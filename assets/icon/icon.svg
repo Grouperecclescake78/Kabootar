@@ -1,0 +1,48 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E1B4B"/>
+      <stop offset="1" stop-color="#0E1116"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="512" cy="470" r="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#4F46E5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- rounded background -->
+  <rect width="1024" height="1024" rx="228" fill="#221C57"/>
+  <circle cx="512" cy="470" r="330" fill="#2A2470"/>
+
+  <!-- mesh: a ring of peer nodes linked to a central hub (evokes a network,
+       with a subtle nod to a wheel — not the Ashoka Chakra itself) -->
+  <g stroke="#8B87F0" stroke-width="10" stroke-linecap="round" opacity="0.55">
+    <line x1="512" y1="470" x2="512" y2="250"/>
+    <line x1="512" y1="470" x2="702" y2="360"/>
+    <line x1="512" y1="470" x2="702" y2="580"/>
+    <line x1="512" y1="470" x2="512" y2="690"/>
+    <line x1="512" y1="470" x2="322" y2="580"/>
+    <line x1="512" y1="470" x2="322" y2="360"/>
+  </g>
+
+  <!-- peer nodes: three carry the tricolour, the rest neutral -->
+  <g>
+    <circle cx="512" cy="250" r="46" fill="#FF9933"/>   <!-- saffron -->
+    <circle cx="512" cy="690" r="46" fill="#138808"/>   <!-- green -->
+    <circle cx="702" cy="360" r="40" fill="#EEF0FF"/>
+    <circle cx="702" cy="580" r="40" fill="#EEF0FF"/>
+    <circle cx="322" cy="360" r="40" fill="#EEF0FF"/>
+    <circle cx="322" cy="580" r="40" fill="#EEF0FF"/>
+  </g>
+
+  <!-- central hub -->
+  <circle cx="512" cy="470" r="74" fill="#FFFFFF"/>
+  <circle cx="512" cy="470" r="30" fill="#1E1B4B"/>
+
+  <!-- tricolour base bar -->
+  <g>
+    <rect x="360" y="812" width="101" height="20" rx="10" fill="#FF9933"/>
+    <rect x="461" y="812" width="102" height="20" rx="10" fill="#FFFFFF"/>
+    <rect x="563" y="812" width="101" height="20" rx="10" fill="#138808"/>
+  </g>
+</svg>
