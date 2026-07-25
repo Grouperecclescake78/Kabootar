@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/royalpinto007/studchat/main/docs/assets/logo.svg" width="96" alt="studchat logo" />
+<img src="https://raw.githubusercontent.com/royalpinto007/StudChat/main/docs/assets/logo.svg" width="96" alt="studchat logo" />
 
 # Studchat
 
-<img src="https://raw.githubusercontent.com/royalpinto007/studchat/main/docs/assets/flag.svg" width="132" alt="Flag of India" />
+<img src="https://raw.githubusercontent.com/royalpinto007/StudChat/main/docs/assets/flag.svg" width="132" alt="Flag of India" />
 
 **🇮🇳 Proudly Made in India**
 
@@ -17,8 +17,8 @@ end-to-end delivery receipts.
 
 <br/>
 
-[![CI](https://github.com/royalpinto007/studchat/actions/workflows/ci.yml/badge.svg)](https://github.com/royalpinto007/studchat/actions/workflows/ci.yml)
-[![Build APK](https://github.com/royalpinto007/studchat/actions/workflows/build-apk.yml/badge.svg)](https://github.com/royalpinto007/studchat/actions/workflows/build-apk.yml)
+[![CI](https://github.com/royalpinto007/StudChat/actions/workflows/ci.yml/badge.svg)](https://github.com/royalpinto007/StudChat/actions/workflows/ci.yml)
+[![Build APK](https://github.com/royalpinto007/StudChat/actions/workflows/build-apk.yml/badge.svg)](https://github.com/royalpinto007/StudChat/actions/workflows/build-apk.yml)
 [![mesh engine: 24 invariants](https://img.shields.io/badge/mesh_engine-24_invariants_green-2ea44f)](tool/engine_check.dart)
 <br/>
 [![Flutter](https://img.shields.io/badge/Flutter-3.22%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
@@ -166,7 +166,7 @@ flowchart TD
 <br/>
 
 ```bash
-git clone https://github.com/royalpinto007/studchat.git
+git clone https://github.com/royalpinto007/StudChat.git
 cd studchat
 
 flutter create . --platforms=android,ios --org dev.studchat  # native shell
@@ -186,9 +186,9 @@ Full platform notes (permissions, minimum SDKs) are in
 <br/>
 
 Every push builds an installable APK. Download the latest from the
-[**Build APK** workflow](https://github.com/royalpinto007/studchat/actions/workflows/build-apk.yml)
+[**Build APK** workflow](https://github.com/royalpinto007/StudChat/actions/workflows/build-apk.yml)
 (open the newest run → **Artifacts** → `studchat-apk`), or from
-[Releases](https://github.com/royalpinto007/studchat/releases) once tagged.
+[Releases](https://github.com/royalpinto007/StudChat/releases) once tagged.
 
 </details>
 
@@ -268,7 +268,7 @@ Contributions are welcome. Good first steps:
 
 - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - Keep the mesh engine framework-free and add tests for routing changes
-- Open an [issue](https://github.com/royalpinto007/studchat/issues/new/choose) or a PR
+- Open an [issue](https://github.com/royalpinto007/StudChat/issues/new/choose) or a PR
 
 By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 Security issues: see [SECURITY.md](SECURITY.md).
@@ -277,12 +277,12 @@ Security issues: see [SECURITY.md](SECURITY.md).
 
 If Studchat is useful or interesting, a star genuinely helps others find it.
 
-<a href="https://github.com/royalpinto007/studchat/stargazers">
-  <img src="https://img.shields.io/github/stars/royalpinto007/studchat?style=social" alt="GitHub stars" />
+<a href="https://github.com/royalpinto007/StudChat/stargazers">
+  <img src="https://img.shields.io/github/stars/royalpinto007/StudChat?style=social" alt="GitHub stars" />
 </a>
 
 Once the project gathers a few stars, a growth chart will render here via
-[star-history.com](https://star-history.com/#royalpinto007/studchat&Date).
+[star-history.com](https://star-history.com/#royalpinto007/StudChat&Date).
 
 ## 📄 License
 
