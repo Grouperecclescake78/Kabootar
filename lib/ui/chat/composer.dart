@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'emoji_picker.dart';
 
-/// The message input bar, shared by 1:1 and channel chats. A rounded input pill
-/// with an emoji button and a send button that lights up when there is
-/// something to send.
+/// The message input bar, shared by 1:1 and channel chats: a single rounded
+/// input pill with an emoji button, and a circular send button that lights up
+/// when there is something to send.
 class Composer extends StatefulWidget {
   const Composer({
     required this.controller,
@@ -50,42 +50,41 @@ class _ComposerState extends State<Composer> {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: scheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
-        ),
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        color: scheme.surface,
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
             Expanded(
               child: Container(
+                constraints: const BoxConstraints(minHeight: 46),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? scheme.surfaceContainerHighest.withValues(alpha: 0.5)
-                      : scheme.surfaceContainerHighest.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(24),
+                      ? scheme.surfaceContainerHighest.withValues(alpha: 0.55)
+                      : scheme.surfaceContainerHighest.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(23),
                   border: Border.all(
-                    color: scheme.outlineVariant.withValues(alpha: 0.4),
+                    color: scheme.outlineVariant.withValues(alpha: 0.35),
                   ),
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
+                    const SizedBox(width: 4),
                     IconButton(
                       onPressed: () =>
                           showEmojiPicker(context, widget.controller),
                       icon: Icon(
                         Icons.emoji_emotions_outlined,
-                        size: 23,
+                        size: 24,
                         color: scheme.onSurface.withValues(alpha: 0.55),
                       ),
                       visualDensity: VisualDensity.compact,
-                      splashRadius: 22,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
                       tooltip: 'Emoji',
                     ),
                     Expanded(
@@ -96,7 +95,12 @@ class _ComposerState extends State<Composer> {
                         textCapitalization: TextCapitalization.sentences,
                         onSubmitted: (_) => widget.onSend(),
                         style: const TextStyle(fontSize: 15.5, height: 1.3),
+                        cursorColor: scheme.primary,
+                        // Override the global filled input theme so no inner
+                        // rectangle shows inside the pill.
                         decoration: InputDecoration(
+                          filled: false,
+                          isCollapsed: true,
                           hintText: widget.hint,
                           hintStyle: TextStyle(
                             fontSize: 15.5,
@@ -105,11 +109,11 @@ class _ComposerState extends State<Composer> {
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.only(
-                            right: 12,
-                            top: 12,
-                            bottom: 12,
+                          contentPadding: const EdgeInsets.fromLTRB(
+                            4,
+                            12,
+                            12,
+                            12,
                           ),
                         ),
                       ),
@@ -136,22 +140,19 @@ class _SendButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
-    return AnimatedScale(
-      scale: active ? 1 : 0.92,
-      duration: const Duration(milliseconds: 150),
+    return SizedBox(
+      width: 46,
+      height: 46,
       child: Material(
-        color: active ? scheme.primary : scheme.primary.withValues(alpha: 0.45),
+        color: active ? scheme.primary : scheme.primary.withValues(alpha: 0.35),
         shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
-          customBorder: const CircleBorder(),
           onTap: active ? onTap : null,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Icon(
-              Icons.arrow_upward_rounded,
-              color: scheme.onPrimary,
-              size: 22,
-            ),
+          child: Icon(
+            Icons.arrow_upward_rounded,
+            color: scheme.onPrimary,
+            size: 22,
           ),
         ),
       ),

@@ -35,6 +35,9 @@ abstract class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       fontFamily: 'Roboto',
+      // Render every emoji from the bundled Twemoji set so glyphs look the
+      // same on every device, rather than the platform's own emoji font.
+      fontFamilyFallback: const <String>['Twemoji'],
     );
 
     return base.copyWith(

@@ -56,3 +56,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/icon.png
+  fonts:
+    # Twemoji (CC-BY 4.0) - a bundled emoji set so glyphs look identical on
+    # every device instead of the platform's own, the way Telegram/WhatsApp do.
+    - family: Twemoji
+      fonts:
+        - asset: assets/fonts/Twemoji.ttf
