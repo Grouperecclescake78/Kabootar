@@ -45,8 +45,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _reload() async {
     final List<Message> next = await context.read<ChatService>().conversation(
-      widget.peer.appId,
-    );
+          widget.peer.appId,
+        );
     if (!mounted) return;
     setState(() => _messages = next);
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToBottom());

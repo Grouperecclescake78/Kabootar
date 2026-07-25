@@ -146,11 +146,11 @@ class _ProfileSheetState extends State<_ProfileSheet> {
                 .withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
             child: ListTile(
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               leading: const Chakra(size: 30),
               title: const Text(
-                'India & studchat',
+                'India & Studchat',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               ),
               subtitle: const Text(

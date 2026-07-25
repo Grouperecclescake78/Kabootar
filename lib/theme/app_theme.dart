@@ -22,14 +22,13 @@ abstract class AppTheme {
 
   static ThemeData _build(Brightness brightness) {
     final bool isDark = brightness == Brightness.dark;
-    final ColorScheme scheme =
-        ColorScheme.fromSeed(
-          seedColor: AppColors.brand,
-          brightness: brightness,
-        ).copyWith(
-          secondary: AppColors.accent,
-          surface: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-        );
+    final ColorScheme scheme = ColorScheme.fromSeed(
+      seedColor: AppColors.brand,
+      brightness: brightness,
+    ).copyWith(
+      secondary: AppColors.accent,
+      surface: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+    );
 
     final ThemeData base = ThemeData(
       useMaterial3: true,

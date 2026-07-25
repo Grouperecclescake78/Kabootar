@@ -7,7 +7,7 @@ import '../widgets/made_in_india.dart';
 import 'civic_content.dart';
 import 'legal_content.dart';
 
-/// "India & studchat" — a civic + about + legal screen. Full-tricolour, with
+/// "India & Studchat" — a civic + about + legal screen. Full-tricolour, with
 /// the Ashoka Chakra, the Preamble, the Fundamental Duties, friendly facts, and
 /// the app's privacy, terms, and non-affiliation disclaimer.
 class AboutScreen extends StatelessWidget {
@@ -17,7 +17,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('India & studchat'),
+        title: const Text('India & Studchat'),
         bottom: const TricolorLine(thickness: 4),
       ),
       body: ListView(
@@ -60,7 +60,7 @@ class _Hero extends StatelessWidget {
           const Chakra(size: 84),
           const SizedBox(height: 16),
           Text(
-            'studchat',
+            'Studchat',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
@@ -150,7 +150,8 @@ class _DisclaimerCard extends StatelessWidget {
         style: TextStyle(
           fontSize: 13,
           height: 1.5,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
         ),
       ),
     );

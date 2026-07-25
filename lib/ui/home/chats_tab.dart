@@ -21,16 +21,15 @@ class ChatsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final ChatService service = context.watch<ChatService>();
 
-    final List<Contact> withChats =
-        service.contacts
-            .where((Contact c) => service.latestWith(c.appId) != null)
-            .toList()
-          ..sort(
-            (Contact a, Contact b) => service
-                .latestWith(b.appId)!
-                .timestamp
-                .compareTo(service.latestWith(a.appId)!.timestamp),
-          );
+    final List<Contact> withChats = service.contacts
+        .where((Contact c) => service.latestWith(c.appId) != null)
+        .toList()
+      ..sort(
+        (Contact a, Contact b) => service
+            .latestWith(b.appId)!
+            .timestamp
+            .compareTo(service.latestWith(a.appId)!.timestamp),
+      );
 
     if (withChats.isEmpty) {
       return const Column(
@@ -60,50 +59,50 @@ class ChatsTab extends StatelessWidget {
               final Contact c = withChats[i];
               final Message last = service.latestWith(c.appId)!;
               return ListTile(
-          onTap: () => onOpenChat(c),
-          leading: Avatar(
-            initials: c.initials,
-            seed: c.appId,
-            online: service.isOnline(c.appId),
-          ),
-          title: Text(
-            c.name,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Row(
-            children: <Widget>[
-              if (last.isOutgoing) ...<Widget>[
-                StatusTicks(
-                  last.status,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.5),
+                onTap: () => onOpenChat(c),
+                leading: Avatar(
+                  initials: c.initials,
+                  seed: c.appId,
+                  online: service.isOnline(c.appId),
                 ),
-                const SizedBox(width: 4),
-              ],
-              Expanded(
-                child: Text(
-                  last.body,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                title: Text(
+                  c.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Row(
+                  children: <Widget>[
+                    if (last.isOutgoing) ...<Widget>[
+                      StatusTicks(
+                        last.status,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Expanded(
+                      child: Text(
+                        last.body,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: Text(
+                  relativeTime(last.timestamp),
                   style: TextStyle(
+                    fontSize: 12,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
-              ),
-            ],
-          ),
-          trailing: Text(
-            relativeTime(last.timestamp),
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-          ),
               );
             },
           ),

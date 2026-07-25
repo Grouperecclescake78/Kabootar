@@ -16,7 +16,8 @@ class Channel {
   /// Compute the stable channel id for a human name. Uses FNV-1a (32-bit) over
   /// the normalised name so the result is identical on every device.
   static String idForName(String name) {
-    final String norm = name.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    final String norm =
+        name.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
     int hash = 0x811c9dc5; // FNV offset basis
     for (final int c in norm.codeUnits) {
       hash ^= c;

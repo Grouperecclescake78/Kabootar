@@ -95,11 +95,11 @@ class _PulseDotState extends State<_PulseDot>
   }
 
   Widget _dot(double opacity) => Container(
-    width: 9,
-    height: 9,
-    decoration: BoxDecoration(
-      color: widget.color.withValues(alpha: opacity),
-      shape: BoxShape.circle,
-    ),
-  );
+        width: 9,
+        height: 9,
+        decoration: BoxDecoration(
+          color: widget.color.withValues(alpha: opacity),
+          shape: BoxShape.circle,
+        ),
+      );
 }

@@ -12,7 +12,7 @@ reasonable window to address the issue before any public disclosure.
 
 ## Scope and current guarantees
 
-studchat is an offline mesh messenger. Be aware of what v1 does and does **not**
+Studchat is an offline mesh messenger. Be aware of what v1 does and does **not**
 guarantee:
 
 | Property | Status in v1 |

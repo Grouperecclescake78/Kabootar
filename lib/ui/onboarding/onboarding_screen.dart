@@ -60,7 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
                           const Text(
-                            'studchat',
+                            'Studchat',
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.w800,

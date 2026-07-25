@@ -43,8 +43,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Future<void> _reload() async {
     final List<Message> next = await context.read<ChatService>().conversation(
-      widget.channel.id,
-    );
+          widget.channel.id,
+        );
     if (!mounted) return;
     setState(() => _messages = next);
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToBottom());
@@ -65,9 +65,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (text.isEmpty) return;
     _input.clear();
     await context.read<ChatService>().sendToChannel(
-      channelId: widget.channel.id,
-      body: text,
-    );
+          channelId: widget.channel.id,
+          body: text,
+        );
     await _reload();
   }
 

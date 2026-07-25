@@ -30,14 +30,13 @@ class PeopleTab extends StatelessWidget {
         icon: Icons.travel_explore_outlined,
         title: 'Looking for people',
         message:
-            'studchat is scanning for nearby phones over Bluetooth and Wi-Fi. '
-            'Anyone running studchat within range will appear here.',
+            'Studchat is scanning for nearby phones over Bluetooth and Wi-Fi. '
+            'Anyone running Studchat within range will appear here.',
       );
     }
 
-    final int online = people
-        .where((Contact c) => service.isOnline(c.appId))
-        .length;
+    final int online =
+        people.where((Contact c) => service.isOnline(c.appId)).length;
 
     return Column(
       children: <Widget>[

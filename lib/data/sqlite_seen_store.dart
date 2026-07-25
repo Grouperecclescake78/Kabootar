@@ -26,10 +26,13 @@ class SqliteSeenStore implements SeenStore {
 
   @override
   Future<void> markSeen(String envelopeId, int ts) async {
-    await _db.insert('seen', <String, Object?>{
-      'id': envelopeId,
-      'ts': ts,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await _db.insert(
+        'seen',
+        <String, Object?>{
+          'id': envelopeId,
+          'ts': ts,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   @override

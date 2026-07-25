@@ -42,7 +42,7 @@
         android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
 
     <application
-        android:label="studchat"
+        android:label="Studchat"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

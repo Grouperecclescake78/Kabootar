@@ -23,7 +23,7 @@ class StudchatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'studchat',
+      title: 'Studchat',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
@@ -154,7 +154,7 @@ class _Splash extends StatelessWidget {
               const Chakra(size: 88),
               const SizedBox(height: 22),
               const Text(
-                'studchat',
+                'Studchat',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
@@ -169,10 +169,9 @@ class _Splash extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(
+                        alpha: 0.6,
+                      ),
                 ),
               ),
               const SizedBox(height: 40),
@@ -197,7 +196,9 @@ class _Splash extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12.5,
                         height: 1.45,
-                        color: Theme.of(context).colorScheme.onSurface
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
                             .withValues(alpha: 0.6),
                       ),
                     ),

@@ -22,11 +22,11 @@ class Contact {
   final bool online;
 
   Contact copyWith({String? name, int? lastSeen, bool? online}) => Contact(
-    appId: appId,
-    name: name ?? this.name,
-    lastSeen: lastSeen ?? this.lastSeen,
-    online: online ?? this.online,
-  );
+        appId: appId,
+        name: name ?? this.name,
+        lastSeen: lastSeen ?? this.lastSeen,
+        online: online ?? this.online,
+      );
 
   String get initials {
     final List<String> parts = name
@@ -41,14 +41,14 @@ class Contact {
   }
 
   Map<String, Object?> toRow() => <String, Object?>{
-    'app_id': appId,
-    'name': name,
-    'last_seen': lastSeen,
-  };
+        'app_id': appId,
+        'name': name,
+        'last_seen': lastSeen,
+      };
 
   static Contact fromRow(Map<String, Object?> row) => Contact(
-    appId: row['app_id']! as String,
-    name: row['name']! as String,
-    lastSeen: (row['last_seen']! as num).toInt(),
-  );
+        appId: row['app_id']! as String,
+        name: row['name']! as String,
+        lastSeen: (row['last_seen']! as num).toInt(),
+      );
 }

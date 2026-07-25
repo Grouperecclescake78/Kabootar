@@ -15,11 +15,14 @@ class ContactRepository {
     required String name,
     required int lastSeen,
   }) async {
-    await _db.insert('contacts', <String, Object?>{
-      'app_id': appId,
-      'name': name,
-      'last_seen': lastSeen,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db.insert(
+        'contacts',
+        <String, Object?>{
+          'app_id': appId,
+          'name': name,
+          'last_seen': lastSeen,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> touch(String appId, int lastSeen) async {

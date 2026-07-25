@@ -63,9 +63,8 @@ class ChannelsTab extends StatelessWidget {
     ctrl.dispose();
     if (name == null || name.trim().isEmpty) return;
     if (!context.mounted) return;
-    final Channel channel = await context
-        .read<ChatService>()
-        .joinOrCreateChannel(name);
+    final Channel channel =
+        await context.read<ChatService>().joinOrCreateChannel(name);
     onOpenChannel(channel);
   }
 
@@ -132,7 +131,9 @@ class ChannelsTab extends StatelessWidget {
                               relativeTime(last.timestamp),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurface
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
                                     .withValues(alpha: 0.5),
                               ),
                             ),

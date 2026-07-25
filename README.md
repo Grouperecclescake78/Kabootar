@@ -2,7 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/royalpinto007/studchat/main/docs/assets/logo.svg" width="96" alt="studchat logo" />
 
-# studchat
+# Studchat
 
 <img src="https://raw.githubusercontent.com/royalpinto007/studchat/main/docs/assets/flag.svg" width="132" alt="Flag of India" />
 
@@ -37,13 +37,13 @@ end-to-end delivery receipts.
 
 > [!NOTE]
 > **Why this exists.** When the network is down or jammed but people are nearby,
-> studchat still gets your message through. Dead-zone buildings, basements, exam
+> Studchat still gets your message through. Dead-zone buildings, basements, exam
 > halls, festivals, protests, stadiums, trains, remote areas, roaming with no
 > plan. Proximity is available even when the internet is not.
 
 ## What it is
 
-studchat is a private **1:1 messenger with no backend at all**. Instead of
+Studchat is a private **1:1 messenger with no backend at all**. Instead of
 routing through a server, your phone forms a peer-to-peer **mesh** with other
 phones nearby. A message you send is flooded to everyone in range, **carried
 onward** by each device it reaches, and delivered the moment a chain of carriers
@@ -54,7 +54,7 @@ It feels like a normal chat app, a contact list, saved history, sent/delivered
 receipts, but the transport underneath is a **store-and-forward mesh** rather
 than the cloud.
 
-|  | studchat | Normal messenger |
+|  | Studchat | Normal messenger |
 | --- | --- | --- |
 | Needs internet / cell data | **No** | Yes |
 | Needs a server or account | **No** | Yes |
@@ -243,17 +243,17 @@ Designed in up front, so nothing surprises you:
 ## 🇮🇳 Made in India
 
 Built in India, open source, privacy-first. No servers, no foreign backend, no
-account: your messages and identity **never leave your device**. studchat is the
+account: your messages and identity **never leave your device**. Studchat is the
 kind of resilient, self-reliant tech that works in India's dead-zones, trains,
 and crowds, and it belongs to everyone who runs it.
 
 The app carries a tricolour identity and the **Ashoka Chakra**, and an in-app
-**"India & studchat"** screen with the **Preamble** and the **Fundamental Duties
+**"India & Studchat"** screen with the **Preamble** and the **Fundamental Duties
 (Article 51A)** for civic reference, plus friendly facts about how the mesh
 works.
 
 > [!NOTE]
-> studchat is an **independent, citizen-built** project. It is **not affiliated
+> Studchat is an **independent, citizen-built** project. It is **not affiliated
 > with or endorsed by** any government or political party. National symbols are
 > used respectfully; we deliberately never use the restricted State Emblem (the
 > Lion Capital). See [DISCLAIMER.md](DISCLAIMER.md).
@@ -275,7 +275,7 @@ Security issues: see [SECURITY.md](SECURITY.md).
 
 ## ⭐ Star this project
 
-If studchat is useful or interesting, a star genuinely helps others find it.
+If Studchat is useful or interesting, a star genuinely helps others find it.
 
 <a href="https://github.com/royalpinto007/studchat/stargazers">
   <img src="https://img.shields.io/github/stars/royalpinto007/studchat?style=social" alt="GitHub stars" />

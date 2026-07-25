@@ -32,11 +32,10 @@ class ChatService extends ChangeNotifier
     required IdentityStore identityStore,
     MeshTransport? transport,
     MeshConfig config = MeshConfig.defaults,
-  }) : _db = database,
-       _identityStore = identityStore,
-       _config = config {
-    _transport =
-        transport ??
+  })  : _db = database,
+        _identityStore = identityStore,
+        _config = config {
+    _transport = transport ??
         NearbyTransport(
           deviceName: _shortName(identity.name),
           serviceType: 'studchat',
@@ -333,25 +332,25 @@ class ChatService extends ChangeNotifier
   // -------------------------------------------------------------------------
 
   Envelope _helloEnvelope() => Envelope(
-    id: _uuid.v4(),
-    kind: EnvelopeKind.hello,
-    fromId: identity.appId,
-    toId: '',
-    body: '',
-    ts: _nowMs(),
-    ttl: 0,
-    name: identity.name,
-  );
+        id: _uuid.v4(),
+        kind: EnvelopeKind.hello,
+        fromId: identity.appId,
+        toId: '',
+        body: '',
+        ts: _nowMs(),
+        ttl: 0,
+        name: identity.name,
+      );
 
   Envelope _toEnvelope(Message m) => Envelope(
-    id: m.id,
-    kind: EnvelopeKind.msg,
-    fromId: identity.appId,
-    toId: m.peerId,
-    body: m.body,
-    ts: m.timestamp,
-    ttl: _config.ttl,
-  );
+        id: m.id,
+        kind: EnvelopeKind.msg,
+        fromId: identity.appId,
+        toId: m.peerId,
+        body: m.body,
+        ts: m.timestamp,
+        ttl: _config.ttl,
+      );
 
   Future<void> _refreshContacts() async {
     _contactList
@@ -363,7 +362,7 @@ class ChatService extends ChangeNotifier
 
   static String _shortName(String name) {
     final String trimmed = name.trim();
-    if (trimmed.isEmpty) return 'studchat';
+    if (trimmed.isEmpty) return 'Studchat';
     return trimmed.length <= 20 ? trimmed : trimmed.substring(0, 20);
   }
 

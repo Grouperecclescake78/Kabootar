@@ -83,26 +83,26 @@ class Envelope {
   /// A copy of this envelope one hop older. Everything is preserved except a
   /// decremented [ttl] - the [id] in particular, so de-dup keeps working.
   Envelope relayed() => Envelope(
-    id: id,
-    kind: kind,
-    fromId: fromId,
-    toId: toId,
-    body: body,
-    ts: ts,
-    ttl: ttl - 1,
-    name: name,
-  );
+        id: id,
+        kind: kind,
+        fromId: fromId,
+        toId: toId,
+        body: body,
+        ts: ts,
+        ttl: ttl - 1,
+        name: name,
+      );
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'id': id,
-    'k': kind.wire,
-    'f': fromId,
-    't': toId,
-    'b': body,
-    'ts': ts,
-    'ttl': ttl,
-    if (name.isNotEmpty) 'n': name,
-  };
+        'id': id,
+        'k': kind.wire,
+        'f': fromId,
+        't': toId,
+        'b': body,
+        'ts': ts,
+        'ttl': ttl,
+        if (name.isNotEmpty) 'n': name,
+      };
 
   static Envelope fromJson(Map<String, Object?> json) {
     Object? req(String key) {
