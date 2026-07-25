@@ -68,7 +68,7 @@ class ConversationTile extends StatelessWidget {
           ],
           Expanded(
             child: Text(
-              last.body,
+              last.preview,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: muted),

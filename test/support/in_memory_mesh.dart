@@ -48,6 +48,15 @@ class CollectingDelegate implements MeshDelegate {
   @override
   Future<void> onInviteReceived(Envelope invite) async => invites.add(invite);
 
+  final List<Envelope> media = <Envelope>[];
+  final List<Envelope> chunks = <Envelope>[];
+
+  @override
+  Future<void> onMediaReceived(Envelope manifest) async => media.add(manifest);
+
+  @override
+  Future<void> onChunkReceived(Envelope chunk) async => chunks.add(chunk);
+
   @override
   Future<void> onHelloReceived(String appId, String name, String keys) async =>
       contacts[appId] = name;

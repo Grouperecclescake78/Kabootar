@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/channel.dart';
@@ -84,6 +85,24 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           channelId: widget.channel.id,
           body: text,
         );
+    await _reload();
+  }
+
+  Future<void> _attachImage() async {
+    final ChatService service = context.read<ChatService>();
+    final XFile? picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 88,
+    );
+    if (picked == null) return;
+    final Uint8List bytes = await picked.readAsBytes();
+    await service.sendImage(
+      convId: widget.channel.id,
+      bytes: bytes,
+      name: picked.name,
+    );
     await _reload();
   }
 
@@ -324,7 +343,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   ),
           ),
           Composer(
-              controller: _input, onSend: _send, hint: 'Message the channel'),
+            controller: _input,
+            onSend: _send,
+            onAttach: _attachImage,
+            hint: 'Message the channel',
+          ),
         ],
       ),
     );

@@ -153,6 +153,11 @@ class MeshEngine {
       } else if (envelope.isRetract) {
         await _delegate.onRetractReceived(envelope.body);
         _emit(MeshEventType.delivered, envelope);
+      } else if (envelope.isMedia) {
+        await _delegate.onMediaReceived(envelope);
+        _emit(MeshEventType.delivered, envelope);
+      } else if (envelope.isChunk) {
+        await _delegate.onChunkReceived(envelope);
       }
     }
 
@@ -184,6 +189,17 @@ class MeshEngine {
       // A private-group invitation sealed to us. Hand it up; do not ack.
       await _delegate.onInviteReceived(envelope);
       _emit(MeshEventType.delivered, envelope);
+      return;
+    }
+    if (envelope.isMedia) {
+      // A media manifest for us. Best-effort like channels; not acked.
+      await _delegate.onMediaReceived(envelope);
+      _emit(MeshEventType.delivered, envelope);
+      return;
+    }
+    if (envelope.isChunk) {
+      // One slice of a media payload. Buffer it; reassembly acks nothing.
+      await _delegate.onChunkReceived(envelope);
       return;
     }
     // Rule 3: an incoming chat message. Persist, display, then acknowledge.

@@ -369,4 +369,44 @@ void main() {
       expect(a.delegate.acked, isEmpty);
     });
   });
+
+  group('MeshEngine - media', () {
+    test('a manifest and its chunks reach the recipient through a relay',
+        () async {
+      final MeshNetwork net = MeshNetwork();
+      final Node a = net.add('A');
+      final Node r = net.add('R');
+      final Node b = net.add('B');
+      net.connect('A', 'R');
+      net.connect('R', 'B');
+
+      const Envelope manifest = Envelope(
+        id: 'm1',
+        kind: EnvelopeKind.media,
+        fromId: 'A',
+        toId: 'B',
+        body: '{"c":1}',
+        ts: 1000,
+        ttl: 8,
+      );
+      const Envelope chunk0 = Envelope(
+        id: 'm1#0',
+        kind: EnvelopeKind.chunk,
+        fromId: 'A',
+        toId: 'B',
+        body: 'm1|0|1|PAYLOAD',
+        ts: 1000,
+        ttl: 8,
+      );
+      await a.engine.enqueueOutbound(manifest);
+      await a.engine.enqueueOutbound(chunk0);
+      await net.pump();
+
+      expect(b.delegate.media.map((Envelope e) => e.id), contains('m1'));
+      expect(b.delegate.chunks.map((Envelope e) => e.id), contains('m1#0'));
+      expect(r.delegate.media, isEmpty); // relay forwards, never consumes
+      expect(r.delegate.chunks, isEmpty);
+      expect(a.delegate.acked, isEmpty); // media is best-effort, not acked
+    });
+  });
 }

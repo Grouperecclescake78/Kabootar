@@ -28,6 +28,13 @@ class Message {
     this.senderId,
     this.deliveredAt,
     this.readAt,
+    this.mediaKind,
+    this.mediaName,
+    this.mediaMime,
+    this.mediaPath,
+    this.mediaBytes,
+    this.mediaStatus,
+    this.thumb,
   });
 
   /// Matches the wire envelope id. Primary key.
@@ -54,13 +61,32 @@ class Message {
   /// Epoch milliseconds when a read receipt arrived (outgoing only).
   final int? readAt;
 
+  /// Media attachment, when this message carries one. [mediaKind] is null for a
+  /// plain text message, or 'image' / 'file'. [mediaPath] is the local file once
+  /// downloaded; [mediaStatus] is 'receiving' | 'complete' | 'failed'; [thumb]
+  /// is a base64 preview shown immediately.
+  final String? mediaKind;
+  final String? mediaName;
+  final String? mediaMime;
+  final String? mediaPath;
+  final int? mediaBytes;
+  final String? mediaStatus;
+  final String? thumb;
+
   bool get isOutgoing => direction == MessageDirection.outgoing;
   bool get isIncoming => direction == MessageDirection.incoming;
+  bool get isMedia => mediaKind != null;
+  bool get isImage => mediaKind == 'image';
+
+  /// One-line preview for conversation lists.
+  String get preview => isImage ? '📷 Photo' : body;
 
   Message copyWith({
     MessageStatus? status,
     int? deliveredAt,
     int? readAt,
+    String? mediaPath,
+    String? mediaStatus,
   }) =>
       Message(
         id: id,
@@ -72,6 +98,13 @@ class Message {
         senderId: senderId,
         deliveredAt: deliveredAt ?? this.deliveredAt,
         readAt: readAt ?? this.readAt,
+        mediaKind: mediaKind,
+        mediaName: mediaName,
+        mediaMime: mediaMime,
+        mediaPath: mediaPath ?? this.mediaPath,
+        mediaBytes: mediaBytes,
+        mediaStatus: mediaStatus ?? this.mediaStatus,
+        thumb: thumb,
       );
 
   Map<String, Object?> toRow() => <String, Object?>{
@@ -84,6 +117,13 @@ class Message {
         'sender_id': senderId,
         'delivered_at': deliveredAt,
         'read_at': readAt,
+        'media_kind': mediaKind,
+        'media_name': mediaName,
+        'media_mime': mediaMime,
+        'media_path': mediaPath,
+        'media_bytes': mediaBytes,
+        'media_status': mediaStatus,
+        'thumb': thumb,
       };
 
   static Message fromRow(Map<String, Object?> row) => Message(
@@ -96,5 +136,12 @@ class Message {
         senderId: row['sender_id'] as String?,
         deliveredAt: (row['delivered_at'] as num?)?.toInt(),
         readAt: (row['read_at'] as num?)?.toInt(),
+        mediaKind: row['media_kind'] as String?,
+        mediaName: row['media_name'] as String?,
+        mediaMime: row['media_mime'] as String?,
+        mediaPath: row['media_path'] as String?,
+        mediaBytes: (row['media_bytes'] as num?)?.toInt(),
+        mediaStatus: row['media_status'] as String?,
+        thumb: row['thumb'] as String?,
       );
 }

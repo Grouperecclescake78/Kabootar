@@ -19,13 +19,19 @@ import 'dart:convert';
 /// * [invite] - a private-group invitation addressed to one recipient. Its
 ///   body is sealed to that recipient (like an encrypted message) and carries
 ///   the group id, name, symmetric key, and current roster.
+/// * [media] - a media manifest (image/file metadata + encrypted thumbnail)
+///   addressed to a peer or group. The bytes follow as [chunk] envelopes.
+/// * [chunk] - one transport-sized slice of a media payload. Its body is
+///   `<mediaId>|<index>|<total>|<base64slice>`; reassembled by the recipient.
 enum EnvelopeKind {
   hello,
   msg,
   ack,
   read,
   retract,
-  invite;
+  invite,
+  media,
+  chunk;
 
   static EnvelopeKind fromWire(String value) {
     switch (value) {
@@ -41,6 +47,10 @@ enum EnvelopeKind {
         return EnvelopeKind.retract;
       case 'invite':
         return EnvelopeKind.invite;
+      case 'media':
+        return EnvelopeKind.media;
+      case 'chunk':
+        return EnvelopeKind.chunk;
       default:
         throw FormatException('Unknown envelope kind: $value');
     }
@@ -111,6 +121,8 @@ class Envelope {
   bool get isRead => kind == EnvelopeKind.read;
   bool get isRetract => kind == EnvelopeKind.retract;
   bool get isInvite => kind == EnvelopeKind.invite;
+  bool get isMedia => kind == EnvelopeKind.media;
+  bool get isChunk => kind == EnvelopeKind.chunk;
 
   /// A copy of this envelope one hop older. Everything is preserved except a
   /// decremented [ttl] - the [id] in particular, so de-dup keeps working.

@@ -12,7 +12,7 @@ class AppDatabase {
 
   final Database db;
 
-  static const int _schemaVersion = 6;
+  static const int _schemaVersion = 7;
 
   static Future<AppDatabase> open({String? path}) async {
     final String dbPath =
@@ -49,12 +49,20 @@ class AppDatabase {
         ts         INTEGER NOT NULL,
         sender_id  TEXT,
         delivered_at INTEGER,
-        read_at      INTEGER
+        read_at      INTEGER,
+        media_kind   TEXT,
+        media_name   TEXT,
+        media_mime   TEXT,
+        media_path   TEXT,
+        media_bytes  INTEGER,
+        media_status TEXT,
+        thumb        TEXT
       )
     ''');
     await db.execute(
       'CREATE INDEX idx_messages_peer_ts ON messages (peer_id, ts)',
     );
+    await _createMediaChunks(db);
 
     await db.execute('''
       CREATE TABLE seen (
@@ -79,6 +87,20 @@ class AppDatabase {
       )
     ''');
     await _createGroupMembers(db);
+  }
+
+  /// Incoming media chunks, buffered on disk so a reassembly survives a restart
+  /// mid-transfer. Rows are deleted once the file is rebuilt.
+  static Future<void> _createMediaChunks(Database db) async {
+    await db.execute('''
+      CREATE TABLE media_chunks (
+        media_id  TEXT NOT NULL,
+        idx       INTEGER NOT NULL,
+        total     INTEGER NOT NULL,
+        data      TEXT NOT NULL,
+        PRIMARY KEY (media_id, idx)
+      )
+    ''');
   }
 
   /// The roster for private groups: who is a member, and their public keys.
@@ -137,6 +159,21 @@ class AppDatabase {
         "ALTER TABLE channels ADD COLUMN group_key TEXT NOT NULL DEFAULT ''",
       );
       await _createGroupMembers(db);
+    }
+    // v6 -> v7: media attachments (image/file) + on-disk chunk buffer.
+    if (from < 7) {
+      for (final String col in <String>[
+        'media_kind TEXT',
+        'media_name TEXT',
+        'media_mime TEXT',
+        'media_path TEXT',
+        'media_bytes INTEGER',
+        'media_status TEXT',
+        'thumb TEXT',
+      ]) {
+        await db.execute('ALTER TABLE messages ADD COLUMN $col');
+      }
+      await _createMediaChunks(db);
     }
   }
 

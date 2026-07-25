@@ -148,7 +148,7 @@ class ChannelsTab extends StatelessWidget {
                       subtitle: Text(
                         last == null
                             ? subtitleWhenEmpty
-                            : '${last.senderId != null && last.senderId != service.identity.appId ? '${service.senderLabel(last.senderId!)}: ' : ''}${last.body}',
+                            : '${last.senderId != null && last.senderId != service.identity.appId ? '${service.senderLabel(last.senderId!)}: ' : ''}${last.preview}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

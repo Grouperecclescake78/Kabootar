@@ -40,6 +40,11 @@ dependencies:
   # AES-GCM). Pure Dart, so it does not disturb the Android toolchain.
   cryptography: ^2.7.0
 
+  # Media: pick images from the gallery (native), compress/thumbnail in pure
+  # Dart so only the picker adds platform code.
+  image_picker: ^1.1.2
+  image: ^4.3.0
+
   # Relative timestamps in the UI ("2m ago")
   intl: ^0.19.0
   emoji_picker_flutter: ^4.5.3

@@ -9,12 +9,16 @@ class Composer extends StatefulWidget {
   const Composer({
     required this.controller,
     required this.onSend,
+    this.onAttach,
     this.hint = 'Message',
     super.key,
   });
 
   final TextEditingController controller;
   final Future<void> Function() onSend;
+
+  /// Optional handler for the attach (image) button; hidden when null.
+  final VoidCallback? onAttach;
   final String hint;
 
   @override
@@ -87,6 +91,22 @@ class _ComposerState extends State<Composer> {
                       ),
                       tooltip: 'Emoji',
                     ),
+                    if (widget.onAttach != null)
+                      IconButton(
+                        onPressed: widget.onAttach,
+                        icon: Icon(
+                          Icons.image_outlined,
+                          size: 23,
+                          color: scheme.onSurface.withValues(alpha: 0.55),
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 38,
+                          minHeight: 40,
+                        ),
+                        tooltip: 'Send a photo',
+                      ),
                     Expanded(
                       child: TextField(
                         controller: widget.controller,

@@ -106,6 +106,16 @@ class MessageRepository {
     );
   }
 
+  /// Mark any media still 'receiving' as 'failed'. Called on startup because
+  /// reassembly state is in memory and does not survive a restart.
+  Future<void> markStaleMediaFailed() async {
+    await _db.update(
+      'messages',
+      <String, Object?>{'media_status': 'failed'},
+      where: "media_status = 'receiving'",
+    );
+  }
+
   /// Wipe every message in one conversation (clear chat), keeping the contact.
   Future<void> clearConversation(String peerId) async {
     await _db.delete(

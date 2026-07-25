@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/models/message.dart';
 import '../../theme/app_theme.dart';
+import '../chat/media_view.dart';
 import '../format.dart';
 import 'status_ticks.dart';
 
@@ -53,7 +54,9 @@ class MessageBubble extends StatelessWidget {
               maxWidth: MediaQuery.of(context).size.width * 0.78,
             ),
             margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
-            padding: const EdgeInsets.fromLTRB(14, 9, 12, 8),
+            padding: message.isImage
+                ? const EdgeInsets.all(4)
+                : const EdgeInsets.fromLTRB(14, 9, 12, 8),
             decoration: BoxDecoration(
               color: bubbleColor,
               borderRadius: BorderRadius.only(
@@ -88,27 +91,35 @@ class MessageBubble extends StatelessWidget {
                       ),
                     ),
                   ),
-                Text(
-                  message.body,
-                  style:
-                      TextStyle(color: textColor, fontSize: 15.5, height: 1.32),
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      clockTime(message.timestamp),
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        color: textColor.withValues(alpha: 0.65),
+                if (message.isImage)
+                  MediaImage(message: message)
+                else
+                  Text(
+                    message.body,
+                    style: TextStyle(
+                        color: textColor, fontSize: 15.5, height: 1.32),
+                  ),
+                SizedBox(height: message.isImage ? 2 : 3),
+                Padding(
+                  padding: message.isImage
+                      ? const EdgeInsets.symmetric(horizontal: 4)
+                      : EdgeInsets.zero,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        clockTime(message.timestamp),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: textColor.withValues(alpha: 0.65),
+                        ),
                       ),
-                    ),
-                    if (mine) ...<Widget>[
-                      const SizedBox(width: 4),
-                      StatusTicks(message.status),
+                      if (mine) ...<Widget>[
+                        const SizedBox(width: 4),
+                        StatusTicks(message.status),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),

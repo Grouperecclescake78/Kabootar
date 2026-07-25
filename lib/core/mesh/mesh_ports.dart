@@ -58,6 +58,14 @@ abstract class MeshDelegate {
   /// sealed to our key; the app decrypts it to learn the group and its key.
   Future<void> onInviteReceived(Envelope invite);
 
+  /// A media manifest (image/file header + thumbnail) reached us. Its bytes
+  /// follow as chunks.
+  Future<void> onMediaReceived(Envelope manifest);
+
+  /// One media chunk reached us. The app buffers it and reassembles the file
+  /// once every chunk has arrived.
+  Future<void> onChunkReceived(Envelope chunk);
+
   /// We learned who is on the other end of a link (from a [hello]).
   /// [publicKeys] is the peer's advertised key bundle (may be empty for a peer
   /// that predates encryption).

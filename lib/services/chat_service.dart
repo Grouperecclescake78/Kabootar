@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/crypto/app_keys.dart';
 import '../core/identity/identity.dart';
+import '../core/media/media_codec.dart';
 import '../core/mesh/envelope.dart';
 import '../core/mesh/mesh_config.dart';
 import '../core/mesh/mesh_engine.dart';
@@ -20,6 +24,7 @@ import '../data/contact_repository.dart';
 import '../data/conv_meta_repository.dart';
 import '../data/group_member_repository.dart';
 import '../data/identity_store.dart';
+import '../data/media_chunk_repository.dart';
 import '../data/message_repository.dart';
 import '../data/sqlite_seen_store.dart';
 import '../transport/mesh_transport.dart';
@@ -54,6 +59,7 @@ class ChatService extends ChangeNotifier
     _contacts = ContactRepository(database.db);
     _channels = ChannelRepository(database.db);
     _groupMembers = GroupMemberRepository(database.db);
+    _mediaChunks = MediaChunkRepository(database.db);
     _convMeta = ConvMetaRepository(database.db);
     _seen = SqliteSeenStore(database.db);
     _engine = MeshEngine(
@@ -95,9 +101,13 @@ class ChatService extends ChangeNotifier
   late final ContactRepository _contacts;
   late final ChannelRepository _channels;
   late final GroupMemberRepository _groupMembers;
+  late final MediaChunkRepository _mediaChunks;
   late final ConvMetaRepository _convMeta;
   late final SqliteSeenStore _seen;
   late final MeshEngine _engine;
+
+  /// Where downloaded media files are written (lazy, cached).
+  Directory? _mediaDir;
 
   /// Private-group id -> its member roster (kept in memory for the UI).
   final Map<String, List<GroupMember>> _groupRosters =
@@ -246,6 +256,10 @@ class ChatService extends ChangeNotifier
     _archived.addAll(await _convMeta.idsWith('archived'));
     _hidden.addAll(await _convMeta.idsWith('hidden'));
     _blocked.addAll(await _convMeta.idsWith('blocked'));
+    // Media reassembly is in-memory, so any transfer caught mid-flight by the
+    // last shutdown is abandoned rather than left half-done.
+    await _messages.markStaleMediaFailed();
+    await _mediaChunks.clearAll();
 
     await _transport.start(listener: this);
 
@@ -654,6 +668,264 @@ class ChatService extends ChangeNotifier
       if (c.appId == appId) return c;
     }
     return null;
+  }
+
+  // --- Media (images) ------------------------------------------------------
+
+  /// Tracks an in-flight incoming media transfer (reassembly state). Lives only
+  /// for the session; a restart marks any unfinished media failed.
+  final Map<String, _IncomingMedia> _incomingMedia = <String, _IncomingMedia>{};
+
+  Future<Directory> _mediaDirectory() async {
+    final Directory d = _mediaDir ??= Directory(
+      p.join((await getApplicationDocumentsDirectory()).path, 'media'),
+    );
+    if (!d.existsSync()) await d.create(recursive: true);
+    return d;
+  }
+
+  /// Send a picked image to a conversation: compress it, make a thumbnail,
+  /// encrypt (to the peer or group key, or plaintext for an open channel),
+  /// split into chunks and flood a manifest plus the chunks. The local copy is
+  /// stored immediately so the sender sees it right away.
+  Future<void> sendImage({
+    required String convId,
+    required Uint8List bytes,
+    String name = 'photo.jpg',
+  }) async {
+    final Uint8List full = MediaCodec.compressImage(bytes);
+    final Uint8List thumb = MediaCodec.thumbnail(bytes);
+    final String mediaId = _uuid.v4();
+    final int ts = _nowMs();
+
+    final File file =
+        File(p.join((await _mediaDirectory()).path, '$mediaId.jpg'));
+    await file.writeAsBytes(full);
+
+    final Message row = Message(
+      id: mediaId,
+      peerId: convId,
+      body: '',
+      direction: MessageDirection.outgoing,
+      status: _connectedDevices.isEmpty
+          ? MessageStatus.sending
+          : MessageStatus.sent,
+      timestamp: ts,
+      senderId: _engine.groupIds.contains(convId) ? identity.appId : null,
+      mediaKind: 'image',
+      mediaName: name,
+      mediaMime: 'image/jpeg',
+      mediaPath: file.path,
+      mediaBytes: full.length,
+      mediaStatus: 'complete',
+      thumb: base64Url.encode(thumb),
+    );
+    await _messages.upsert(row);
+    _latestPerPeer[convId] = row;
+    notifyListeners();
+
+    if (convId == identity.appId) return; // self note: nothing to flood
+
+    final (String fullB64, bool enc) = await _encryptConv(convId, full);
+    final (String thumbCipher, _) = await _encryptConv(convId, thumb);
+    final List<String> chunks = MediaCodec.chunk(fullB64);
+    final String manifest = jsonEncode(<String, Object?>{
+      'k': 'image',
+      'n': name,
+      'm': 'image/jpeg',
+      'b': full.length,
+      'c': chunks.length,
+      'e': enc ? 1 : 0,
+      't': thumbCipher,
+    });
+    final String sig = _keys == null
+        ? ''
+        : await _keys.signB64(_signedBytes(
+            id: mediaId,
+            from: identity.appId,
+            to: convId,
+            ts: ts,
+            body: manifest,
+          ));
+    await _engine.enqueueOutbound(Envelope(
+      id: mediaId,
+      kind: EnvelopeKind.media,
+      fromId: identity.appId,
+      toId: convId,
+      body: manifest,
+      ts: ts,
+      ttl: _config.ttl,
+      sig: sig,
+    ));
+    for (int i = 0; i < chunks.length; i++) {
+      await _engine.enqueueOutbound(Envelope(
+        id: '$mediaId#$i',
+        kind: EnvelopeKind.chunk,
+        fromId: identity.appId,
+        toId: convId,
+        body: '$mediaId|$i|${chunks.length}|${chunks[i]}',
+        ts: ts,
+        ttl: _config.ttl,
+      ));
+    }
+  }
+
+  /// Encrypt [bytes] for a conversation, mirroring the text path. Returns the
+  /// base64 payload and whether it was encrypted.
+  Future<(String, bool)> _encryptConv(String convId, List<int> bytes) async {
+    final Channel? group = channelById(convId);
+    if (group != null && group.isPrivate && group.groupKey.isNotEmpty) {
+      return (await AppKeys.sealSym(group.groupKey, bytes), true);
+    }
+    final PeerKeys? peer = _peerKeys[convId];
+    if (_keys != null && peer != null && !_engine.groupIds.contains(convId)) {
+      return (await _keys.seal(peer.agree, bytes), true);
+    }
+    return (base64Url.encode(bytes), false);
+  }
+
+  /// Decrypt a received media payload using the transfer's recorded mode.
+  Future<Uint8List?> _decryptPayload(_IncomingMedia meta, String b64) async {
+    if (b64.isEmpty) return null;
+    if (!meta.enc) {
+      try {
+        return Uint8List.fromList(base64Url.decode(b64));
+      } catch (_) {
+        return null;
+      }
+    }
+    final Channel? group = channelById(meta.convId);
+    if (group != null && group.isPrivate && group.groupKey.isNotEmpty) {
+      final List<int>? c = await AppKeys.openSym(group.groupKey, b64);
+      return c == null ? null : Uint8List.fromList(c);
+    }
+    final PeerKeys? peer = _peerKeys[meta.fromId];
+    if (_keys != null && peer != null) {
+      final List<int>? c = await _keys.open(peer.agree, b64);
+      return c == null ? null : Uint8List.fromList(c);
+    }
+    return null; // encrypted but we lack the key
+  }
+
+  @override
+  Future<void> onMediaReceived(Envelope manifest) async {
+    final bool isChannel = _engine.groupIds.contains(manifest.toId);
+    final String convId = isChannel ? manifest.toId : manifest.fromId;
+    if (!isChannel && _blocked.contains(manifest.fromId)) return;
+
+    final PeerKeys? sender = _peerKeys[manifest.fromId];
+    if (sender != null && manifest.sig.isNotEmpty) {
+      final bool ok = await AppKeys.verifyB64(
+        _signedBytes(
+          id: manifest.id,
+          from: manifest.fromId,
+          to: manifest.toId,
+          ts: manifest.ts,
+          body: manifest.body,
+        ),
+        manifest.sig,
+        sender.sign,
+      );
+      if (!ok) return; // forged manifest
+    }
+
+    final Map<String, Object?> j =
+        jsonDecode(manifest.body) as Map<String, Object?>;
+    final String mediaId = manifest.id;
+    final int total = (j['c'] as num?)?.toInt() ?? 0;
+    final _IncomingMedia meta = _IncomingMedia(
+      enc: (j['e'] as num?)?.toInt() == 1,
+      convId: convId,
+      fromId: manifest.fromId,
+      total: total,
+    );
+    _incomingMedia[mediaId] = meta;
+    final Uint8List? thumbBytes =
+        await _decryptPayload(meta, (j['t'] as String?) ?? '');
+
+    final Message row = Message(
+      id: mediaId,
+      peerId: convId,
+      body: '',
+      direction: MessageDirection.incoming,
+      status: MessageStatus.delivered,
+      timestamp: manifest.ts,
+      senderId: isChannel ? manifest.fromId : null,
+      mediaKind: 'image',
+      mediaName: (j['n'] as String?) ?? 'photo.jpg',
+      mediaMime: (j['m'] as String?) ?? 'image/jpeg',
+      mediaBytes: (j['b'] as num?)?.toInt(),
+      mediaStatus: 'receiving',
+      thumb: thumbBytes == null ? '' : base64Url.encode(thumbBytes),
+    );
+    await _messages.upsert(row);
+    if (!isChannel) {
+      await _contacts.touch(manifest.fromId, _nowMs());
+      await _refreshContacts();
+    }
+    if (_archived.remove(convId)) {
+      await _convMeta.setFlag(convId, 'archived', false);
+    }
+    if (_hidden.remove(convId)) {
+      await _convMeta.setFlag(convId, 'hidden', false);
+    }
+    _latestPerPeer[convId] = row;
+    _maybeNotify(
+      isChannel: isChannel,
+      convId: convId,
+      sender: senderLabel(manifest.fromId),
+      body: '📷 Photo',
+    );
+    notifyListeners();
+    await _tryReassemble(mediaId);
+  }
+
+  @override
+  Future<void> onChunkReceived(Envelope chunk) async {
+    final List<String> parts = chunk.body.split('|');
+    if (parts.length < 4) return;
+    final String mediaId = parts[0];
+    final int idx = int.tryParse(parts[1]) ?? -1;
+    final int total = int.tryParse(parts[2]) ?? 0;
+    if (idx < 0) return;
+    // base64url never contains '|', but rejoin defensively.
+    final String data = parts.sublist(3).join('|');
+    await _mediaChunks.put(
+      mediaId: mediaId,
+      idx: idx,
+      total: total,
+      data: data,
+    );
+    if (_incomingMedia.containsKey(mediaId)) await _tryReassemble(mediaId);
+  }
+
+  Future<void> _tryReassemble(String mediaId) async {
+    final _IncomingMedia? meta = _incomingMedia[mediaId];
+    if (meta == null || meta.total <= 0) return;
+    if (await _mediaChunks.count(mediaId) < meta.total) return;
+
+    final String cipherB64 =
+        MediaCodec.join(await _mediaChunks.ordered(mediaId));
+    final Uint8List? bytes = await _decryptPayload(meta, cipherB64);
+    final Message? msg = await _messages.byId(mediaId);
+    if (bytes == null) {
+      if (msg != null) {
+        await _messages.upsert(msg.copyWith(mediaStatus: 'failed'));
+      }
+    } else {
+      final File file =
+          File(p.join((await _mediaDirectory()).path, '$mediaId.jpg'));
+      await file.writeAsBytes(bytes);
+      if (msg != null) {
+        await _messages.upsert(
+          msg.copyWith(mediaStatus: 'complete', mediaPath: file.path),
+        );
+      }
+    }
+    await _mediaChunks.clear(mediaId);
+    _incomingMedia.remove(mediaId);
+    await _reloadLatest();
+    notifyListeners();
   }
 
   // --- Message & conversation management ------------------------------------
@@ -1080,4 +1352,19 @@ class ChatService extends ChangeNotifier
     unawaited(_db.close());
     super.dispose();
   }
+}
+
+/// Session-only reassembly state for one incoming media transfer.
+class _IncomingMedia {
+  _IncomingMedia({
+    required this.enc,
+    required this.convId,
+    required this.fromId,
+    required this.total,
+  });
+
+  final bool enc;
+  final String convId;
+  final String fromId;
+  final int total;
 }
