@@ -27,23 +27,39 @@ class Composer extends StatefulWidget {
 
 class _ComposerState extends State<Composer> {
   bool _hasText = false;
+  bool _emoji = false;
+  final FocusNode _focus = FocusNode();
 
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_update);
     _hasText = widget.controller.text.trim().isNotEmpty;
+    // Tapping the text field (opening the keyboard) dismisses the emoji panel.
+    _focus.addListener(() {
+      if (_focus.hasFocus && _emoji) setState(() => _emoji = false);
+    });
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_update);
+    _focus.dispose();
     super.dispose();
   }
 
   void _update() {
     final bool has = widget.controller.text.trim().isNotEmpty;
     if (has != _hasText) setState(() => _hasText = has);
+  }
+
+  void _toggleEmoji() {
+    setState(() => _emoji = !_emoji);
+    if (_emoji) {
+      _focus.unfocus(); // swap the keyboard for the emoji panel
+    } else {
+      _focus.requestFocus();
+    }
   }
 
   @override
@@ -53,99 +69,112 @@ class _ComposerState extends State<Composer> {
 
     return SafeArea(
       top: false,
-      child: Container(
-        color: scheme.surface,
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            Expanded(
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 46),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? scheme.surfaceContainerHighest.withValues(alpha: 0.55)
-                      : scheme.surfaceContainerHighest.withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(23),
-                  border: Border.all(
-                    color: scheme.outlineVariant.withValues(alpha: 0.35),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Container(
+            color: scheme.surface,
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Expanded(
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 46),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? scheme.surfaceContainerHighest
+                              .withValues(alpha: 0.55)
+                          : scheme.surfaceContainerHighest
+                              .withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(23),
+                      border: Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        const SizedBox(width: 4),
+                        IconButton(
+                          onPressed: _toggleEmoji,
+                          icon: Icon(
+                            _emoji
+                                ? Icons.keyboard_outlined
+                                : Icons.emoji_emotions_outlined,
+                            size: 24,
+                            color: scheme.onSurface.withValues(alpha: 0.55),
+                          ),
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
+                          ),
+                          tooltip: _emoji ? 'Keyboard' : 'Emoji',
+                        ),
+                        if (widget.onAttach != null)
+                          IconButton(
+                            onPressed: widget.onAttach,
+                            icon: Icon(
+                              Icons.image_outlined,
+                              size: 23,
+                              color: scheme.onSurface.withValues(alpha: 0.55),
+                            ),
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 38,
+                              minHeight: 40,
+                            ),
+                            tooltip: 'Send a photo',
+                          ),
+                        Expanded(
+                          child: TextField(
+                            controller: widget.controller,
+                            focusNode: _focus,
+                            minLines: 1,
+                            maxLines: 5,
+                            textCapitalization: TextCapitalization.sentences,
+                            onTap: () {
+                              if (_emoji) setState(() => _emoji = false);
+                            },
+                            onSubmitted: (_) => widget.onSend(),
+                            style: const TextStyle(fontSize: 15.5, height: 1.3),
+                            cursorColor: scheme.primary,
+                            // Override the global filled input theme so no inner
+                            // rectangle shows inside the pill.
+                            decoration: InputDecoration(
+                              filled: false,
+                              isCollapsed: true,
+                              hintText: widget.hint,
+                              hintStyle: TextStyle(
+                                fontSize: 15.5,
+                                color: scheme.onSurface.withValues(alpha: 0.4),
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: const EdgeInsets.fromLTRB(
+                                4,
+                                12,
+                                12,
+                                12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    const SizedBox(width: 4),
-                    IconButton(
-                      onPressed: () =>
-                          showEmojiPicker(context, widget.controller),
-                      icon: Icon(
-                        Icons.emoji_emotions_outlined,
-                        size: 24,
-                        color: scheme.onSurface.withValues(alpha: 0.55),
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 40,
-                      ),
-                      tooltip: 'Emoji',
-                    ),
-                    if (widget.onAttach != null)
-                      IconButton(
-                        onPressed: widget.onAttach,
-                        icon: Icon(
-                          Icons.image_outlined,
-                          size: 23,
-                          color: scheme.onSurface.withValues(alpha: 0.55),
-                        ),
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 38,
-                          minHeight: 40,
-                        ),
-                        tooltip: 'Send a photo',
-                      ),
-                    Expanded(
-                      child: TextField(
-                        controller: widget.controller,
-                        minLines: 1,
-                        maxLines: 5,
-                        textCapitalization: TextCapitalization.sentences,
-                        onSubmitted: (_) => widget.onSend(),
-                        style: const TextStyle(fontSize: 15.5, height: 1.3),
-                        cursorColor: scheme.primary,
-                        // Override the global filled input theme so no inner
-                        // rectangle shows inside the pill.
-                        decoration: InputDecoration(
-                          filled: false,
-                          isCollapsed: true,
-                          hintText: widget.hint,
-                          hintStyle: TextStyle(
-                            fontSize: 15.5,
-                            color: scheme.onSurface.withValues(alpha: 0.4),
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: const EdgeInsets.fromLTRB(
-                            4,
-                            12,
-                            12,
-                            12,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                const SizedBox(width: 8),
+                _SendButton(active: _hasText, onTap: widget.onSend),
+              ],
             ),
-            const SizedBox(width: 8),
-            _SendButton(active: _hasText, onTap: widget.onSend),
-          ],
-        ),
+          ),
+          if (_emoji) EmojiPanel(controller: widget.controller),
+        ],
       ),
     );
   }
