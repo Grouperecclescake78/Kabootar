@@ -25,9 +25,6 @@ jobs:
         with:
           channel: stable
 
-      - name: Materialise the Android shell
-        run: flutter create . --platforms=android --org dev.studchat
-
       - name: Install dependencies
         run: flutter pub get
 
