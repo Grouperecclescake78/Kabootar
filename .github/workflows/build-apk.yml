@@ -40,16 +40,29 @@ jobs:
       - name: Build release APKs (per-ABI, ~22MB each vs a 60MB universal)
         run: flutter build apk --release --split-per-abi
 
+      - name: Stage APKs with release filenames
+        run: |
+          cd build/app/outputs/flutter-apk
+          ver=$(grep -m1 '^version:' "$GITHUB_WORKSPACE/pubspec.yaml" \
+            | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
+          for f in app-*-release.apk; do
+            abi=$(echo "$f" | sed -E 's/^app-(.*)-release\.apk$/\1/')
+            cp "$f" "kabootar-v${ver}-${abi}.apk"
+          done
+          ls -la kabootar-*.apk
+
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: kabootar-apks
-          path: build/app/outputs/flutter-apk/*-release.apk
+          path: build/app/outputs/flutter-apk/kabootar-*.apk
           if-no-files-found: error
 
-      - name: Attach APKs to the GitHub Release (tags only)
+      - name: Publish the GitHub Release (tags only)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/*-release.apk
-          generate_release_notes: true
+          name: Kabootar ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
+          files: build/app/outputs/flutter-apk/kabootar-*.apk
+          fail_on_unmatched_files: true
