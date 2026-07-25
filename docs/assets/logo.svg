@@ -1,0 +1,29 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="studchat logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#3730A3"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="24" fill="url(#g)"/>
+  <!-- mesh: a central node linked to peers -->
+  <g stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.95">
+    <line x1="48" y1="48" x2="26" y2="30"/>
+    <line x1="48" y1="48" x2="70" y2="30"/>
+    <line x1="48" y1="48" x2="26" y2="68"/>
+    <line x1="48" y1="48" x2="70" y2="68"/>
+  </g>
+  <g fill="#FFFFFF">
+    <circle cx="48" cy="48" r="8"/>
+    <circle cx="26" cy="30" r="5.5"/>
+    <circle cx="70" cy="30" r="5.5"/>
+    <circle cx="26" cy="68" r="5.5"/>
+    <circle cx="70" cy="68" r="5.5"/>
+  </g>
+  <!-- tricolour accent -->
+  <g>
+    <rect x="30" y="82" width="12" height="4" rx="2" fill="#FF9933"/>
+    <rect x="42" y="82" width="12" height="4" rx="2" fill="#FFFFFF"/>
+    <rect x="54" y="82" width="12" height="4" rx="2" fill="#138808"/>
+  </g>
+</svg>

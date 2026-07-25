@@ -1,0 +1,35 @@
+name: "✨ Feature request"
+description: Suggest an idea for studchat
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that studchat makes hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area?
+      options:
+        - Mesh engine (routing, delivery, acks)
+        - Transport (Bluetooth / Wi-Fi discovery)
+        - UI / UX
+        - Encryption / privacy
+        - Group chat
+        - Media (photos / voice)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
