@@ -79,14 +79,20 @@ class MeshEngine {
       ts: _clock(),
       ttl: config.ttl,
     );
-    await _inject(envelope);
+    await enqueueOutbound(envelope);
     return envelope;
   }
+
+  /// Re-inject an outgoing envelope after a restart. The carry-cache lives in
+  /// memory, so on launch the app reconstructs still-undelivered messages from
+  /// the database and hands them back here to resume flooding. De-dup makes
+  /// this safe even if a copy is still circulating.
+  Future<void> resumeOutbound(Envelope envelope) => enqueueOutbound(envelope);
 
   /// Mark, carry, and flood an envelope we originated (a message we sent, or an
   /// ack we emitted). Marking it seen up front means our own echo bouncing back
   /// off a peer is de-duplicated instead of re-processed.
-  Future<void> _inject(Envelope envelope) async {
+  Future<void> enqueueOutbound(Envelope envelope) async {
     await _seen.markSeen(envelope.id, envelope.ts);
     _cache(envelope);
     _outbound.broadcast(envelope);
@@ -157,7 +163,7 @@ class MeshEngine {
       ttl: config.ttl,
     );
     _emit(MeshEventType.ackEmitted, ack);
-    await _inject(ack);
+    await enqueueOutbound(ack);
   }
 
   /// Rules 5 & 6: carry-and-forward on behalf of someone else.
