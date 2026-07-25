@@ -10,7 +10,7 @@ void main() {
       MaterialApp(home: OnboardingScreen(onComplete: (String _) async {})),
     );
 
-    expect(find.text('studchat'), findsOneWidget);
+    expect(find.text('Studchat'), findsOneWidget);
     expect(find.text('Start messaging'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
   });
