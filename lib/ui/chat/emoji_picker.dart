@@ -1,169 +1,57 @@
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 
-/// A lightweight emoji picker shown as a bottom sheet. Tapping an emoji inserts
-/// it at the cursor and keeps the sheet open so several can be added.
+/// A full emoji picker shown as a bottom sheet: a **Recently used** tab plus
+/// the usual categories (smileys, people, animals, food, activities, travel,
+/// objects, symbols, flags) and search. Tapping inserts at the cursor.
 ///
-/// Note: emoji glyphs render in the device's own emoji font (on Android that is
-/// the system/Noto set). Apple's emoji artwork is proprietary and cannot be
-/// legally bundled, so exact iPhone glyphs are only shown on Apple devices.
+/// Note on style: glyphs render in the device's own emoji font. On Android that
+/// is Google/Noto; Apple's emoji artwork is proprietary and cannot be legally
+/// bundled, so exact iPhone glyphs only appear on Apple devices.
 Future<void> showEmojiPicker(
   BuildContext context,
   TextEditingController controller,
 ) {
   return showModalBottomSheet<void>(
     context: context,
-    showDragHandle: true,
-    builder: (_) => _EmojiSheet(controller: controller),
-  );
-}
-
-void _insert(TextEditingController c, String emoji) {
-  final TextSelection sel = c.selection;
-  if (sel.isValid) {
-    final String next = c.text.replaceRange(sel.start, sel.end, emoji);
-    c.value = TextEditingValue(
-      text: next,
-      selection: TextSelection.collapsed(offset: sel.start + emoji.length),
-    );
-  } else {
-    c.text = c.text + emoji;
-    c.selection = TextSelection.collapsed(offset: c.text.length);
-  }
-}
-
-class _EmojiSheet extends StatelessWidget {
-  const _EmojiSheet({required this.controller});
-
-  final TextEditingController controller;
-
-  static const List<String> _emojis = <String>[
-    '😀',
-    '😃',
-    '😄',
-    '😁',
-    '😆',
-    '😅',
-    '😂',
-    '🤣',
-    '🙂',
-    '😉',
-    '😊',
-    '😍',
-    '😘',
-    '😗',
-    '😜',
-    '🤪',
-    '🤔',
-    '😎',
-    '🥳',
-    '😴',
-    '🤗',
-    '🙃',
-    '😇',
-    '🤩',
-    '😢',
-    '😭',
-    '😤',
-    '😡',
-    '😱',
-    '😳',
-    '🥺',
-    '😬',
-    '👍',
-    '👎',
-    '👌',
-    '👏',
-    '🙏',
-    '💪',
-    '🤝',
-    '✌️',
-    '🤞',
-    '👋',
-    '🤙',
-    '🙌',
-    '👀',
-    '🧠',
-    '❤️',
-    '🧡',
-    '💛',
-    '💚',
-    '💙',
-    '💜',
-    '🖤',
-    '💔',
-    '🔥',
-    '✨',
-    '⭐',
-    '🎉',
-    '💯',
-    '✅',
-    '❌',
-    '❗',
-    '❓',
-    '💬',
-    '📱',
-    '📢',
-    '🔒',
-    '📶',
-    '🔋',
-    '🌐',
-    '🏫',
-    '🎓',
-    '☕',
-    '🍕',
-    '🏏',
-    '⚽',
-    '🎮',
-    '🎵',
-    '🌟',
-    '🌈',
-    '☀️',
-    '🌙',
-    '🚀',
-    '🇮🇳',
-    '🪔',
-    '🙏🏽',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 320,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(
-              'Emoji',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    builder: (BuildContext ctx) {
+      final ColorScheme scheme = Theme.of(ctx).colorScheme;
+      final Color muted = scheme.onSurface.withValues(alpha: 0.45);
+      return SizedBox(
+        height: 340,
+        child: EmojiPicker(
+          textEditingController: controller,
+          config: Config(
+            height: 340,
+            emojiViewConfig: EmojiViewConfig(
+              columns: 8,
+              emojiSizeMax: 26,
+              backgroundColor: scheme.surface,
+              recentsLimit: 32,
             ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 8,
-                mainAxisSpacing: 2,
-                crossAxisSpacing: 2,
+            categoryViewConfig: CategoryViewConfig(
+              backgroundColor: scheme.surface,
+              indicatorColor: scheme.primary,
+              iconColorSelected: scheme.primary,
+              backspaceColor: scheme.primary,
+              iconColor: muted,
+              dividerColor: scheme.outlineVariant.withValues(alpha: 0.3),
+            ),
+            bottomActionBarConfig: BottomActionBarConfig(
+              backgroundColor: scheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
               ),
-              itemCount: _emojis.length,
-              itemBuilder: (BuildContext context, int i) {
-                return InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: () => _insert(controller, _emojis[i]),
-                  child: Center(
-                    child: Text(
-                      _emojis[i],
-                      style: const TextStyle(fontSize: 26),
-                    ),
-                  ),
-                );
-              },
+              buttonColor: scheme.primary,
+              buttonIconColor: scheme.onPrimary,
+            ),
+            searchViewConfig: SearchViewConfig(
+              backgroundColor: scheme.surface,
+              buttonIconColor: muted,
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      );
+    },
+  );
 }
