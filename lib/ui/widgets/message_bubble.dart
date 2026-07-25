@@ -6,11 +6,15 @@ import '../format.dart';
 import 'status_ticks.dart';
 
 /// One chat bubble. Outgoing bubbles are brand-coloured and right-aligned with
-/// a delivery tick; incoming are neutral and left-aligned.
+/// a delivery tick; incoming are neutral and left-aligned. In a channel, an
+/// incoming bubble is labelled with [senderName].
 class MessageBubble extends StatelessWidget {
-  const MessageBubble(this.message, {super.key});
+  const MessageBubble(this.message, {this.senderName, super.key});
 
   final Message message;
+
+  /// Name of the sender, shown above an incoming channel bubble. Null in 1:1.
+  final String? senderName;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +56,18 @@ class MessageBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            if (!mine && senderName != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(
+                  senderName!,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: _nameColor(senderName!),
+                  ),
+                ),
+              ),
             Text(
               message.body,
               style: TextStyle(color: textColor, fontSize: 15.5, height: 1.32),
@@ -77,5 +93,19 @@ class MessageBubble extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static const List<Color> _namePalette = <Color>[
+    Color(0xFF0EA5A4),
+    Color(0xFFDB2777),
+    Color(0xFFEA580C),
+    Color(0xFF7C3AED),
+    Color(0xFF2563EB),
+    Color(0xFF059669),
+  ];
+
+  Color _nameColor(String name) {
+    final int h = name.codeUnits.fold<int>(0, (int a, int c) => a + c);
+    return _namePalette[h % _namePalette.length];
   }
 }

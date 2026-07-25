@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/models/channel.dart';
 import '../../core/models/contact.dart';
 import '../../services/chat_service.dart';
+import '../channels/channel_chat_screen.dart';
+import '../channels/channels_tab.dart';
 import '../chat/chat_screen.dart';
 import '../widgets/chakra.dart';
 import '../widgets/made_in_india.dart';
@@ -24,12 +27,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _tab = 0;
 
-  static const List<String> _titles = <String>['Chats', 'People', 'Mesh'];
+  static const List<String> _titles = <String>[
+    'Chats',
+    'People',
+    'Channels',
+    'Mesh',
+  ];
 
   void _openChat(Contact peer) {
     Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => ChatScreen(peer: peer)));
+  }
+
+  void _openChannel(Channel channel) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ChannelChatScreen(channel: channel),
+      ),
+    );
   }
 
   @override
@@ -69,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: <Widget>[
           ChatsTab(onOpenChat: _openChat),
           PeopleTab(onOpenChat: _openChat),
+          ChannelsTab(onOpenChannel: _openChannel),
           const MeshTab(),
         ],
       ),
@@ -90,6 +107,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 : const Icon(Icons.people_outline),
             selectedIcon: const Icon(Icons.people),
             label: 'People',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.campaign_outlined),
+            selectedIcon: Icon(Icons.campaign),
+            label: 'Channels',
           ),
           const NavigationDestination(
             icon: Icon(Icons.hub_outlined),

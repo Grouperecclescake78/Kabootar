@@ -8,9 +8,11 @@ import '../core/mesh/envelope.dart';
 import '../core/mesh/mesh_config.dart';
 import '../core/mesh/mesh_engine.dart';
 import '../core/mesh/mesh_ports.dart';
+import '../core/models/channel.dart';
 import '../core/models/contact.dart';
 import '../core/models/message.dart';
 import '../data/app_database.dart';
+import '../data/channel_repository.dart';
 import '../data/contact_repository.dart';
 import '../data/identity_store.dart';
 import '../data/message_repository.dart';
@@ -41,6 +43,7 @@ class ChatService extends ChangeNotifier
         );
     _messages = MessageRepository(database.db);
     _contacts = ContactRepository(database.db);
+    _channels = ChannelRepository(database.db);
     _seen = SqliteSeenStore(database.db);
     _engine = MeshEngine(
       myId: identity.appId,
@@ -63,6 +66,7 @@ class ChatService extends ChangeNotifier
   late final MeshTransport _transport;
   late final MessageRepository _messages;
   late final ContactRepository _contacts;
+  late final ChannelRepository _channels;
   late final SqliteSeenStore _seen;
   late final MeshEngine _engine;
 
@@ -71,6 +75,7 @@ class ChatService extends ChangeNotifier
   // --- Observable state the UI renders -------------------------------------
 
   final List<Contact> _contactList = <Contact>[];
+  final List<Channel> _channelList = <Channel>[];
   final Map<String, Message> _latestPerPeer = <String, Message>{};
   final List<MeshEvent> _activityLog = <MeshEvent>[];
 
@@ -79,6 +84,7 @@ class ChatService extends ChangeNotifier
   final Set<String> _connectedDevices = <String>{};
 
   List<Contact> get contacts => List<Contact>.unmodifiable(_contactList);
+  List<Channel> get channels => List<Channel>.unmodifiable(_channelList);
   List<MeshEvent> get activityLog => List<MeshEvent>.unmodifiable(_activityLog);
   int get onlinePeerCount => _connectedDevices.length;
   int get carriedForOthers => _engine.carriedCount;
@@ -87,12 +93,26 @@ class ChatService extends ChangeNotifier
 
   bool isOnline(String appId) => _deviceToApp.values.contains(appId);
 
+  /// Display name for a message sender in a channel: the contact's name if we
+  /// know them, our own 'You', or a short id fallback.
+  String senderLabel(String appId) {
+    if (appId == identity.appId) return 'You';
+    for (final Contact c in _contactList) {
+      if (c.appId == appId) return c.name;
+    }
+    return 'Someone (${appId.substring(0, appId.length.clamp(0, 6))})';
+  }
+
   // -------------------------------------------------------------------------
 
   Future<void> start() async {
     _contactList
       ..clear()
       ..addAll(await _contacts.all());
+    _channelList
+      ..clear()
+      ..addAll(await _channels.all());
+    _engine.groupIds.addAll(_channelList.map((Channel c) => c.id));
     _latestPerPeer.addAll(await _messages.latestPerPeer());
 
     await _transport.start(listener: this);
@@ -116,9 +136,69 @@ class ChatService extends ChangeNotifier
     notifyListeners();
   }
 
-  /// Load a full conversation for the chat screen.
-  Future<List<Message>> conversation(String appId) =>
-      _messages.conversationWith(appId);
+  /// Load a full conversation (1:1 or channel) for the chat screen.
+  Future<List<Message>> conversation(String peerOrChannelId) =>
+      _messages.conversationWith(peerOrChannelId);
+
+  // --- Channels (broadcast groups) -----------------------------------------
+
+  /// Join a channel by name, creating it locally if new. The id is derived
+  /// deterministically from the name, so anyone who joins the same name lands
+  /// in the same room. Returns the channel.
+  Future<Channel> joinOrCreateChannel(String name) async {
+    final String clean = name.trim().replaceAll(RegExp(r'^#+'), '').trim();
+    final Channel channel = Channel(
+      id: Channel.idForName(clean),
+      name: clean,
+      joinedAt: _nowMs(),
+    );
+    await _channels.upsert(channel);
+    _engine.groupIds.add(channel.id);
+    _channelList
+      ..removeWhere((Channel c) => c.id == channel.id)
+      ..insert(0, channel);
+    notifyListeners();
+    return channel;
+  }
+
+  Future<void> leaveChannel(String id) async {
+    await _channels.delete(id);
+    _engine.groupIds.remove(id);
+    _channelList.removeWhere((Channel c) => c.id == id);
+    notifyListeners();
+  }
+
+  Channel? channelById(String id) {
+    for (final Channel c in _channelList) {
+      if (c.id == id) return c;
+    }
+    return null;
+  }
+
+  /// Post a message to a channel: flooded to everyone nearby who has joined it.
+  /// Best-effort broadcast, so it is marked sent (no per-member ack).
+  Future<Message> sendToChannel({
+    required String channelId,
+    required String body,
+  }) async {
+    final Envelope envelope = await _engine.sendMessage(
+      toId: channelId,
+      body: body,
+    );
+    final Message message = Message(
+      id: envelope.id,
+      peerId: channelId,
+      body: body,
+      direction: MessageDirection.outgoing,
+      status: MessageStatus.sent,
+      timestamp: envelope.ts,
+      senderId: identity.appId,
+    );
+    await _messages.upsert(message);
+    _latestPerPeer[channelId] = message;
+    notifyListeners();
+    return message;
+  }
 
   /// Send a chat message to [toId]. The engine mints the wire envelope; we
   /// persist a row with the same id so an incoming ack can flip it to
@@ -157,18 +237,25 @@ class ChatService extends ChangeNotifier
 
   @override
   Future<void> onMessageDelivered(Envelope message) async {
+    final bool isChannel = _engine.groupIds.contains(message.toId);
+    // A channel message belongs to the channel conversation and records who
+    // sent it; a 1:1 message belongs to the sender's conversation.
+    final String convId = isChannel ? message.toId : message.fromId;
     final Message row = Message(
       id: message.id,
-      peerId: message.fromId,
+      peerId: convId,
       body: message.body,
       direction: MessageDirection.incoming,
       status: MessageStatus.delivered,
       timestamp: message.ts,
+      senderId: isChannel ? message.fromId : null,
     );
     await _messages.upsert(row);
-    await _contacts.touch(message.fromId, _nowMs());
-    _latestPerPeer[message.fromId] = row;
-    await _refreshContacts();
+    if (!isChannel) {
+      await _contacts.touch(message.fromId, _nowMs());
+      await _refreshContacts();
+    }
+    _latestPerPeer[convId] = row;
     notifyListeners();
   }
 

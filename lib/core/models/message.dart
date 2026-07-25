@@ -24,13 +24,14 @@ class Message {
     required this.direction,
     required this.status,
     required this.timestamp,
+    this.senderId,
   });
 
   /// Matches the wire envelope id. Primary key.
   final String id;
 
-  /// The *other* party's app id - the recipient for outgoing, the sender for
-  /// incoming. This is what groups messages into a conversation.
+  /// The conversation this message belongs to: for a 1:1 chat it is the *other*
+  /// party's app id; for a channel it is the channel id.
   final String peerId;
 
   final String body;
@@ -39,6 +40,10 @@ class Message {
 
   /// Epoch milliseconds.
   final int timestamp;
+
+  /// For an incoming **channel** message, the app id of whoever sent it (so the
+  /// UI can label who said what). Null for 1:1 messages.
+  final String? senderId;
 
   bool get isOutgoing => direction == MessageDirection.outgoing;
   bool get isIncoming => direction == MessageDirection.incoming;
@@ -50,6 +55,7 @@ class Message {
     direction: direction,
     status: status ?? this.status,
     timestamp: timestamp,
+    senderId: senderId,
   );
 
   Map<String, Object?> toRow() => <String, Object?>{
@@ -59,6 +65,7 @@ class Message {
     'direction': direction.name,
     'status': status.name,
     'ts': timestamp,
+    'sender_id': senderId,
   };
 
   static Message fromRow(Map<String, Object?> row) => Message(
@@ -68,5 +75,6 @@ class Message {
     direction: MessageDirection.values.byName(row['direction']! as String),
     status: MessageStatus.values.byName(row['status']! as String),
     timestamp: (row['ts']! as num).toInt(),
+    senderId: row['sender_id'] as String?,
   );
 }

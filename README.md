@@ -233,8 +233,9 @@ Designed in up front, so nothing surprises you:
 - [x] Store-and-forward with de-dup, TTL, and end-to-end acks
 - [x] Persistent history and contacts; resume undelivered on restart
 - [x] Live mesh diagnostics view
+- [x] 📢 Channels (broadcast group rooms, joined by name)
 - [ ] 🔐 End-to-end encryption (per-contact keys) + message signing
-- [ ] 👥 Group rooms
+- [ ] 👥 Private groups with membership
 - [ ] 🖼 Media over Wi-Fi transport
 - [ ] 🔋 Battery duty-cycling
 - [ ] 🌉 Online bridge: any node with internet relays onward

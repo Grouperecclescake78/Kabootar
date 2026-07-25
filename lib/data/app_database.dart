@@ -12,7 +12,7 @@ class AppDatabase {
 
   final Database db;
 
-  static const int _schemaVersion = 1;
+  static const int _schemaVersion = 2;
 
   static Future<AppDatabase> open({String? path}) async {
     final String dbPath =
@@ -24,6 +24,7 @@ class AppDatabase {
         await d.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
     return AppDatabase._(db);
   }
@@ -44,7 +45,8 @@ class AppDatabase {
         body       TEXT NOT NULL,
         direction  TEXT NOT NULL,
         status     TEXT NOT NULL,
-        ts         INTEGER NOT NULL
+        ts         INTEGER NOT NULL,
+        sender_id  TEXT
       )
     ''');
     await db.execute(
@@ -58,6 +60,26 @@ class AppDatabase {
       )
     ''');
     await db.execute('CREATE INDEX idx_seen_ts ON seen (ts)');
+
+    await _createChannels(db);
+  }
+
+  static Future<void> _createChannels(Database db) async {
+    await db.execute('''
+      CREATE TABLE channels (
+        id         TEXT PRIMARY KEY,
+        name       TEXT NOT NULL,
+        joined_at  INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  static Future<void> _onUpgrade(Database db, int from, int to) async {
+    // v1 -> v2: channels support (broadcast groups) + per-message sender.
+    if (from < 2) {
+      await _createChannels(db);
+      await db.execute('ALTER TABLE messages ADD COLUMN sender_id TEXT');
+    }
   }
 
   Future<void> close() => db.close();

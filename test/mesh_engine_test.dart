@@ -238,4 +238,28 @@ void main() {
       expect(net.nodes['C']!.delegate.contacts, isEmpty);
     });
   });
+
+  group('MeshEngine - channels', () {
+    test('every member receives; a non-member relay only carries', () async {
+      final MeshNetwork net = MeshNetwork();
+      final Node a = net.add('A');
+      final Node r = net.add('R');
+      final Node b = net.add('B');
+      a.engine.groupIds.add('ch1');
+      b.engine.groupIds.add('ch1');
+      net.connect('A', 'R');
+      net.connect('R', 'B');
+
+      await a.engine.sendMessage(toId: 'ch1', body: 'hi all');
+      await net.pump();
+
+      expect(
+        b.delegate.delivered.any((Envelope e) => e.body == 'hi all'),
+        isTrue,
+      );
+      expect(r.delegate.delivered, isEmpty);
+      expect(r.delegate.count(MeshEventType.relayed), greaterThan(0));
+      expect(a.delegate.delivered, isEmpty); // sender de-dups its own message
+    });
+  });
 }

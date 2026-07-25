@@ -43,6 +43,11 @@ class MeshEngine {
   final String myId;
   final MeshConfig config;
 
+  /// Channel (broadcast group) ids this device has joined. A message addressed
+  /// to one of these is delivered to us *and* relayed onward to other members.
+  /// Owned by the application, which adds/removes ids as channels are joined.
+  final Set<String> groupIds = <String>{};
+
   final MeshOutbound _outbound;
   final SeenStore _seen;
   final MeshDelegate _delegate;
@@ -130,6 +135,14 @@ class MeshEngine {
     if (envelope.toId == myId) {
       await _deliverToSelf(envelope);
       return;
+    }
+
+    // Channel (broadcast group) message addressed to a group we belong to:
+    // deliver a copy to ourselves, then keep relaying so every other member
+    // also receives it. Channels are best-effort, so no acks are emitted.
+    if (envelope.isMessage && groupIds.contains(envelope.toId)) {
+      await _delegate.onMessageDelivered(envelope);
+      _emit(MeshEventType.delivered, envelope);
     }
 
     // Rules 5 & 6: addressed to someone else - relay if it still has hops.

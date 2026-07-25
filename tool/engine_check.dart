@@ -459,6 +459,37 @@ Future<void> scenarioHello() async {
   );
 }
 
+Future<void> scenarioChannels() async {
+  section('Channels: every member receives, a non-member relay just carries');
+  final Network net = Network();
+  final Node a = net.add('A');
+  final Node r = net.add('R');
+  final Node b = net.add('B');
+
+  // A and B join channel "ch1"; R is only a relay and does not join.
+  a.engine.groupIds.add('ch1');
+  b.engine.groupIds.add('ch1');
+  net.connect('A', 'R');
+  net.connect('R', 'B');
+
+  await a.engine.sendMessage(toId: 'ch1', body: 'hi all');
+  await net.pump();
+
+  check(
+    'B (member) received the channel message',
+    b.delegate.delivered.any((Envelope e) => e.body == 'hi all'),
+  );
+  check(
+    'R (non-member) relayed but never delivered to itself',
+    r.delegate.delivered.isEmpty &&
+        r.delegate.countOf(MeshEventType.relayed) > 0,
+  );
+  check(
+    'A did not re-deliver its own channel message (dedup on own send)',
+    a.delegate.delivered.isEmpty,
+  );
+}
+
 Future<void> main() async {
   print('studchat mesh engine - behavioural verification');
   await scenarioDirectDelivery();
@@ -470,6 +501,7 @@ Future<void> main() async {
   await scenarioCacheBounds();
   await scenarioHousekeeping();
   await scenarioHello();
+  await scenarioChannels();
 
   print('\n── result');
   print('  $_passed passed, $_failed failed');
