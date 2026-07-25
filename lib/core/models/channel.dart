@@ -8,7 +8,13 @@ import 'dart:math';
 /// be exchanged over the mesh - two devices with the same code compute the same
 /// id and therefore address the same channel.
 class Channel {
-  const Channel({required this.id, required this.name, required this.joinedAt});
+  const Channel({
+    required this.id,
+    required this.name,
+    required this.joinedAt,
+    this.isPrivate = false,
+    this.groupKey = '',
+  });
 
   final String id;
 
@@ -18,11 +24,24 @@ class Channel {
 
   final int joinedAt;
 
-  /// The shareable code, recovered from the id.
+  /// A private group is invite-only and end-to-end encrypted with [groupKey];
+  /// an open channel (the default) is code-joinable and plaintext.
+  final bool isPrivate;
+
+  /// Base64url symmetric key shared by a private group's members. Empty for
+  /// open channels.
+  final String groupKey;
+
+  /// The shareable code, recovered from the id (open channels only).
   String get code => id.startsWith('ch_') ? id.substring(3) : id;
 
   /// What to show in lists and headers.
-  String get display => name.trim().isEmpty ? '#$code' : name;
+  String get display =>
+      name.trim().isEmpty ? (isPrivate ? 'Private group' : '#$code') : name;
+
+  /// A fresh private-group id (not derived from a code - private groups are
+  /// never joined by code, only by invite).
+  static String privateGroupId(String random) => 'pg_$random';
 
   /// The channel id for a given code.
   static String idForCode(String code) =>
@@ -38,18 +57,27 @@ class Channel {
     ).join();
   }
 
-  Channel copyWith({String? name}) =>
-      Channel(id: id, name: name ?? this.name, joinedAt: joinedAt);
+  Channel copyWith({String? name}) => Channel(
+        id: id,
+        name: name ?? this.name,
+        joinedAt: joinedAt,
+        isPrivate: isPrivate,
+        groupKey: groupKey,
+      );
 
   Map<String, Object?> toRow() => <String, Object?>{
         'id': id,
         'name': name,
         'joined_at': joinedAt,
+        'is_private': isPrivate ? 1 : 0,
+        'group_key': groupKey,
       };
 
   static Channel fromRow(Map<String, Object?> row) => Channel(
         id: row['id']! as String,
         name: row['name']! as String,
         joinedAt: (row['joined_at']! as num).toInt(),
+        isPrivate: (row['is_private'] as num?)?.toInt() == 1,
+        groupKey: (row['group_key'] as String?) ?? '',
       );
 }

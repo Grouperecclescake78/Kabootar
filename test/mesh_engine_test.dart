@@ -338,4 +338,35 @@ void main() {
       expect(r.delegate.retracted, isEmpty); // relay is not a member
     });
   });
+
+  group('MeshEngine - invite (private group)', () {
+    test('an invite reaches its recipient through a relay, not the relay',
+        () async {
+      final MeshNetwork net = MeshNetwork();
+      final Node a = net.add('A');
+      final Node r = net.add('R');
+      final Node b = net.add('B');
+      net.connect('A', 'R');
+      net.connect('R', 'B');
+
+      const Envelope invite = Envelope(
+        id: 'inv1',
+        kind: EnvelopeKind.invite,
+        fromId: 'A',
+        toId: 'B',
+        body: 'sealed-payload',
+        ts: 1000,
+        ttl: 8,
+        enc: true,
+        sig: 'sig',
+      );
+      await a.engine.enqueueOutbound(invite);
+      await net.pump();
+
+      expect(b.delegate.invites.map((Envelope e) => e.id), contains('inv1'));
+      expect(r.delegate.invites, isEmpty); // relay forwards, does not consume
+      // Invites are not acknowledged.
+      expect(a.delegate.acked, isEmpty);
+    });
+  });
 }

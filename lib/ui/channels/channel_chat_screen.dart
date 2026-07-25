@@ -12,6 +12,7 @@ import '../widgets/message_bubble.dart';
 import '../chat/message_actions.dart';
 import '../chat/message_info_sheet.dart';
 import '../chat/composer.dart';
+import 'group_members_screen.dart';
 
 /// A broadcast channel conversation. Messages are flooded to everyone nearby
 /// who has joined the same channel. Incoming bubbles are labelled with who sent
@@ -166,9 +167,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
         title: Text('Leave ${widget.channel.display}?'),
-        content: const Text(
-          'You will stop receiving messages from this channel. You can rejoin '
-          'any time with its code.',
+        content: Text(
+          widget.channel.isPrivate
+              ? 'You will stop receiving messages from this group. You would '
+                  'need a new invite to rejoin.'
+              : 'You will stop receiving messages from this channel. You can '
+                  'rejoin any time with its code.',
         ),
         actions: <Widget>[
           TextButton(
@@ -188,68 +192,101 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
   }
 
+  void _openMembers() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GroupMembersScreen(group: widget.channel),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ChatService service = context.watch<ChatService>();
+    final bool priv = widget.channel.isPrivate;
+    final String subtitle = priv
+        ? '${service.groupMembers(widget.channel.id).length} members · encrypted'
+        : 'Code ${widget.channel.code} · ${service.onlinePeerCount} nearby';
 
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
         bottom: const TricolorLine(),
-        title: Row(
-          children: <Widget>[
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: const Icon(Icons.tag, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    widget.channel.display,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    'Code ${widget.channel.code} · ${service.onlinePeerCount} nearby',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
+        title: InkWell(
+          onTap: priv ? _openMembers : null,
+          child: Row(
+            children: <Widget>[
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: Icon(
+                  priv ? Icons.lock : Icons.tag,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      widget.channel.display,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.ios_share, size: 20),
-            tooltip: 'Share code',
-            onPressed: _shareCode,
-          ),
+          if (priv)
+            IconButton(
+              icon: const Icon(Icons.group_outlined, size: 22),
+              tooltip: 'Members',
+              onPressed: _openMembers,
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.ios_share, size: 20),
+              tooltip: 'Share code',
+              onPressed: _shareCode,
+            ),
           PopupMenuButton<String>(
             onSelected: (String v) {
               if (v == 'leave') _leave();
               if (v == 'code') _shareCode();
+              if (v == 'members') _openMembers();
             },
             itemBuilder: (BuildContext ctx) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'code',
-                child: Text('Copy channel code'),
-              ),
-              const PopupMenuItem<String>(
+              if (priv)
+                const PopupMenuItem<String>(
+                  value: 'members',
+                  child: Text('Members'),
+                )
+              else
+                const PopupMenuItem<String>(
+                  value: 'code',
+                  child: Text('Copy channel code'),
+                ),
+              PopupMenuItem<String>(
                 value: 'leave',
-                child: Text('Leave channel'),
+                child: Text(priv ? 'Leave group' : 'Leave channel'),
               ),
             ],
           ),
@@ -261,12 +298,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           Expanded(
             child: _messages.isEmpty
                 ? EmptyState(
-                    icon: Icons.campaign_outlined,
+                    icon: priv ? Icons.lock_outline : Icons.campaign_outlined,
                     title: 'Welcome to ${widget.channel.display}',
-                    message:
-                        'Share the code ${widget.channel.code} so others can '
-                        'join. Anyone nearby who enters it sees what you post '
-                        'here. Say something!',
+                    message: priv
+                        ? 'This group is invite-only and end-to-end encrypted. '
+                            'Tap Members to invite people, then say something.'
+                        : 'Share the code ${widget.channel.code} so others can '
+                            'join. Anyone nearby who enters it sees what you '
+                            'post here. Say something!',
                   )
                 : ListView.builder(
                     controller: _scroll,

@@ -180,6 +180,12 @@ class MeshEngine {
       _emit(MeshEventType.delivered, envelope);
       return;
     }
+    if (envelope.isInvite) {
+      // A private-group invitation sealed to us. Hand it up; do not ack.
+      await _delegate.onInviteReceived(envelope);
+      _emit(MeshEventType.delivered, envelope);
+      return;
+    }
     // Rule 3: an incoming chat message. Persist, display, then acknowledge.
     await _delegate.onMessageDelivered(envelope);
     _emit(MeshEventType.delivered, envelope);

@@ -54,6 +54,10 @@ abstract class MeshDelegate {
   /// and any copy we hold (delivered or still carried) must be removed.
   Future<void> onRetractReceived(String retractedMessageId);
 
+  /// A private-group invitation addressed to us arrived. The [invite] body is
+  /// sealed to our key; the app decrypts it to learn the group and its key.
+  Future<void> onInviteReceived(Envelope invite);
+
   /// We learned who is on the other end of a link (from a [hello]).
   /// [publicKeys] is the peer's advertised key bundle (may be empty for a peer
   /// that predates encryption).

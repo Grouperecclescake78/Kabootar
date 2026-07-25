@@ -43,6 +43,11 @@ class CollectingDelegate implements MeshDelegate {
   @override
   Future<void> onRetractReceived(String id) async => retracted.add(id);
 
+  final List<Envelope> invites = <Envelope>[];
+
+  @override
+  Future<void> onInviteReceived(Envelope invite) async => invites.add(invite);
+
   @override
   Future<void> onHelloReceived(String appId, String name, String keys) async =>
       contacts[appId] = name;

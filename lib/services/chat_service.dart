@@ -12,11 +12,13 @@ import '../core/mesh/mesh_engine.dart';
 import '../core/mesh/mesh_ports.dart';
 import '../core/models/channel.dart';
 import '../core/models/contact.dart';
+import '../core/models/group_member.dart';
 import '../core/models/message.dart';
 import '../data/app_database.dart';
 import '../data/channel_repository.dart';
 import '../data/contact_repository.dart';
 import '../data/conv_meta_repository.dart';
+import '../data/group_member_repository.dart';
 import '../data/identity_store.dart';
 import '../data/message_repository.dart';
 import '../data/sqlite_seen_store.dart';
@@ -51,6 +53,7 @@ class ChatService extends ChangeNotifier
     _messages = MessageRepository(database.db);
     _contacts = ContactRepository(database.db);
     _channels = ChannelRepository(database.db);
+    _groupMembers = GroupMemberRepository(database.db);
     _convMeta = ConvMetaRepository(database.db);
     _seen = SqliteSeenStore(database.db);
     _engine = MeshEngine(
@@ -91,9 +94,14 @@ class ChatService extends ChangeNotifier
   late final MessageRepository _messages;
   late final ContactRepository _contacts;
   late final ChannelRepository _channels;
+  late final GroupMemberRepository _groupMembers;
   late final ConvMetaRepository _convMeta;
   late final SqliteSeenStore _seen;
   late final MeshEngine _engine;
+
+  /// Private-group id -> its member roster (kept in memory for the UI).
+  final Map<String, List<GroupMember>> _groupRosters =
+      <String, List<GroupMember>>{};
 
   /// How long after sending a message "delete for everyone" stays offered.
   static const int deleteForEveryoneWindowMs = 15 * 60 * 1000;
@@ -233,6 +241,7 @@ class ChatService extends ChangeNotifier
       ..clear()
       ..addAll(await _channels.all());
     _engine.groupIds.addAll(_channelList.map((Channel c) => c.id));
+    await _loadRosters();
     _latestPerPeer.addAll(await _messages.latestPerPeer());
     _archived.addAll(await _convMeta.idsWith('archived'));
     _hidden.addAll(await _convMeta.idsWith('hidden'));
@@ -306,6 +315,8 @@ class ChatService extends ChangeNotifier
 
   Future<void> leaveChannel(String id) async {
     await _channels.delete(id);
+    await _groupMembers.deleteGroup(id);
+    _groupRosters.remove(id);
     _engine.groupIds.remove(id);
     _channelList.removeWhere((Channel c) => c.id == id);
     notifyListeners();
@@ -318,23 +329,184 @@ class ChatService extends ChangeNotifier
     return null;
   }
 
-  /// Post a message to a channel: flooded to everyone nearby who has joined it.
-  /// Best-effort broadcast, so it is marked sent (no per-member ack).
+  // --- Private groups (invite-only, encrypted) -----------------------------
+
+  bool isPrivateGroup(String id) => channelById(id)?.isPrivate ?? false;
+
+  /// The roster of a private group, for the members screen.
+  List<GroupMember> groupMembers(String id) => List<GroupMember>.unmodifiable(
+      _groupRosters[id] ?? const <GroupMember>[]);
+
+  /// Contacts who can be invited to [groupId]: ones whose keys we hold and who
+  /// are not already members.
+  List<Contact> invitableContacts(String groupId) {
+    final Set<String> members =
+        (_groupRosters[groupId] ?? const <GroupMember>[])
+            .map((GroupMember m) => m.appId)
+            .toSet();
+    return _contactList
+        .where((Contact c) => _peerKeys.containsKey(c.appId))
+        .where((Contact c) => !members.contains(c.appId))
+        .toList();
+  }
+
+  /// Create a new private group. A fresh symmetric key is minted and we become
+  /// its first member; others join only by an encrypted invite.
+  Future<Channel> createPrivateGroup(String name) async {
+    final String key = await AppKeys.newGroupKey();
+    final Channel channel = Channel(
+      id: Channel.privateGroupId(_uuid.v4()),
+      name: name.trim(),
+      joinedAt: _nowMs(),
+      isPrivate: true,
+      groupKey: key,
+    );
+    await _channels.upsert(channel);
+    _engine.groupIds.add(channel.id);
+    _channelList.insert(0, channel);
+    final GroupMember me = GroupMember(
+      groupId: channel.id,
+      appId: identity.appId,
+      name: _selfName,
+      pubBundle: _keys?.publicBundle ?? '',
+    );
+    await _groupMembers.upsertAll(<GroupMember>[me]);
+    _groupRosters[channel.id] = <GroupMember>[me];
+    notifyListeners();
+    return channel;
+  }
+
+  /// Invite a contact to a private group: add them to the roster and send them
+  /// an encrypted invite (group id, name, key, roster) sealed to their key.
+  Future<bool> inviteToGroup(String groupId, Contact contact) async {
+    final AppKeys? keys = _keys;
+    final PeerKeys? pk = _peerKeys[contact.appId];
+    final Channel? group = channelById(groupId);
+    if (keys == null || pk == null || group == null || !group.isPrivate) {
+      return false;
+    }
+
+    final GroupMember invitee = GroupMember(
+      groupId: groupId,
+      appId: contact.appId,
+      name: contact.name,
+      pubBundle: contact.pubBundle,
+    );
+    final List<GroupMember> roster = <GroupMember>[
+      ...?_groupRosters[groupId],
+      if (!(_groupRosters[groupId] ?? const <GroupMember>[])
+          .any((GroupMember m) => m.appId == contact.appId))
+        invitee,
+    ];
+    await _groupMembers.upsertAll(<GroupMember>[invitee]);
+    _groupRosters[groupId] = roster;
+
+    final String payload = jsonEncode(<String, Object?>{
+      'g': groupId,
+      'n': group.name,
+      'k': group.groupKey,
+      'm': roster.map((GroupMember m) => m.toWire()).toList(),
+    });
+    final String id = _uuid.v4();
+    final int ts = _nowMs();
+    final String blob = await keys.seal(pk.agree, utf8.encode(payload));
+    final String sig = await keys.signB64(
+      _signedBytes(
+        id: id,
+        from: identity.appId,
+        to: contact.appId,
+        ts: ts,
+        body: blob,
+      ),
+    );
+    await _engine.enqueueOutbound(
+      Envelope(
+        id: id,
+        kind: EnvelopeKind.invite,
+        fromId: identity.appId,
+        toId: contact.appId,
+        body: blob,
+        ts: ts,
+        ttl: _config.ttl,
+        enc: true,
+        sig: sig,
+      ),
+    );
+    notifyListeners();
+    return true;
+  }
+
+  String get _selfName =>
+      identity.name.trim().isEmpty ? 'You' : identity.name.trim();
+
+  Future<void> _loadRosters() async {
+    _groupRosters.clear();
+    for (final GroupMember m in await _groupMembers.all()) {
+      (_groupRosters[m.groupId] ??= <GroupMember>[]).add(m);
+      final PeerKeys? pk = AppKeys.parseBundle(m.pubBundle);
+      if (pk != null) _peerKeys.putIfAbsent(m.appId, () => pk);
+    }
+  }
+
+  /// Post a message to a channel or private group: flooded to everyone nearby
+  /// who has joined it. Best-effort broadcast, so it is marked sent (no
+  /// per-member ack). In a private group the body is sealed with the group key
+  /// and signed, so only members can read it.
   Future<Message> sendToChannel({
     required String channelId,
     required String body,
   }) async {
-    final Envelope envelope = await _engine.sendMessage(
-      toId: channelId,
-      body: body,
-    );
+    final Channel? group = channelById(channelId);
+    final String id = _uuid.v4();
+    final int ts = _nowMs();
+    Envelope envelope;
+    if (group != null &&
+        group.isPrivate &&
+        group.groupKey.isNotEmpty &&
+        _keys != null) {
+      final String blob = await AppKeys.sealSym(
+        group.groupKey,
+        utf8.encode(body),
+      );
+      final String sig = await _keys.signB64(
+        _signedBytes(
+          id: id,
+          from: identity.appId,
+          to: channelId,
+          ts: ts,
+          body: blob,
+        ),
+      );
+      envelope = Envelope(
+        id: id,
+        kind: EnvelopeKind.msg,
+        fromId: identity.appId,
+        toId: channelId,
+        body: blob,
+        ts: ts,
+        ttl: _config.ttl,
+        enc: true,
+        sig: sig,
+      );
+    } else {
+      envelope = Envelope(
+        id: id,
+        kind: EnvelopeKind.msg,
+        fromId: identity.appId,
+        toId: channelId,
+        body: body,
+        ts: ts,
+        ttl: _config.ttl,
+      );
+    }
+    await _engine.enqueueOutbound(envelope);
     final Message message = Message(
-      id: envelope.id,
+      id: id,
       peerId: channelId,
       body: body,
       direction: MessageDirection.outgoing,
       status: MessageStatus.sent,
-      timestamp: envelope.ts,
+      timestamp: ts,
       senderId: identity.appId,
     );
     await _messages.upsert(message);
@@ -593,33 +765,17 @@ class ChatService extends ChangeNotifier
     // A blocked contact's messages are accepted by the mesh but never shown.
     if (!isChannel && _blocked.contains(message.fromId)) return;
 
-    // Decrypt and authenticate an encrypted 1:1 message. If it fails to verify
-    // with a known key it is forged or tampered, so we drop it; if we simply do
-    // not have the sender's key yet, we store a visible placeholder so nothing
-    // silently disappears.
+    // Decrypt and authenticate an encrypted message. A message that fails to
+    // verify with a known key is forged or tampered, so we drop it; if we
+    // simply do not have the sender's key yet, we keep a visible placeholder so
+    // nothing silently disappears.
     String bodyText = message.body;
-    if (message.enc && !isChannel) {
-      final AppKeys? keys = _keys;
-      final PeerKeys? peer = _peerKeys[message.fromId];
-      if (keys == null || peer == null) {
-        bodyText = '🔒 Encrypted message';
-      } else {
-        final bool ok = await AppKeys.verifyB64(
-          _signedBytes(
-            id: message.id,
-            from: message.fromId,
-            to: message.toId,
-            ts: message.ts,
-            body: message.body,
-          ),
-          message.sig,
-          peer.sign,
-        );
-        if (!ok) return; // forged / tampered
-        final List<int>? clear = await keys.open(peer.agree, message.body);
-        if (clear == null) return; // undecipherable
-        bodyText = utf8.decode(clear);
-      }
+    if (message.enc) {
+      final String? plain = isChannel
+          ? await _openGroupMessage(message)
+          : await _openDirectMessage(message);
+      if (plain == null) return; // forged or undecipherable
+      bodyText = plain;
     }
 
     final Message row = Message(
@@ -696,6 +852,96 @@ class ChatService extends ChangeNotifier
     await _messages.deleteById(retractedMessageId);
     await _reloadLatest();
     notifyListeners();
+  }
+
+  @override
+  Future<void> onInviteReceived(Envelope invite) async {
+    // An encrypted private-group invite sealed to us. Verify the inviter, open
+    // the payload, and join the group (store its key + roster).
+    final AppKeys? keys = _keys;
+    final PeerKeys? inviter = _peerKeys[invite.fromId];
+    if (keys == null || inviter == null) return; // cannot authenticate inviter
+    final bool ok = await AppKeys.verifyB64(
+      _signedBytes(
+        id: invite.id,
+        from: invite.fromId,
+        to: invite.toId,
+        ts: invite.ts,
+        body: invite.body,
+      ),
+      invite.sig,
+      inviter.sign,
+    );
+    if (!ok) return;
+    final List<int>? clear = await keys.open(inviter.agree, invite.body);
+    if (clear == null) return;
+
+    final Map<String, Object?> j =
+        (jsonDecode(utf8.decode(clear)) as Map<String, Object?>);
+    final String groupId = j['g']! as String;
+    final String name = (j['n'] as String?) ?? '';
+    final String key = j['k']! as String;
+    if (key.isEmpty || _engine.groupIds.contains(groupId)) return; // already in
+    final List<GroupMember> roster = <GroupMember>[
+      for (final Object? m in (j['m'] as List<Object?>? ?? const <Object?>[]))
+        GroupMember.fromWire(groupId, (m! as Map).cast<String, Object?>()),
+    ];
+
+    final Channel channel = Channel(
+      id: groupId,
+      name: name,
+      joinedAt: _nowMs(),
+      isPrivate: true,
+      groupKey: key,
+    );
+    await _channels.upsert(channel);
+    _engine.groupIds.add(groupId);
+    _channelList
+      ..removeWhere((Channel c) => c.id == groupId)
+      ..insert(0, channel);
+    await _groupMembers.upsertAll(roster);
+    _groupRosters[groupId] = roster;
+    for (final GroupMember m in roster) {
+      final PeerKeys? pk = AppKeys.parseBundle(m.pubBundle);
+      if (pk != null) _peerKeys.putIfAbsent(m.appId, () => pk);
+    }
+    notifyListeners();
+  }
+
+  /// Decrypt + authenticate an encrypted 1:1 message. Returns the plaintext, a
+  /// placeholder if we lack the sender's key, or null to drop (forged/corrupt).
+  Future<String?> _openDirectMessage(Envelope m) async {
+    final AppKeys? keys = _keys;
+    final PeerKeys? peer = _peerKeys[m.fromId];
+    if (keys == null || peer == null) return '🔒 Encrypted message';
+    final bool ok = await AppKeys.verifyB64(
+      _signedBytes(
+          id: m.id, from: m.fromId, to: m.toId, ts: m.ts, body: m.body),
+      m.sig,
+      peer.sign,
+    );
+    if (!ok) return null;
+    final List<int>? clear = await keys.open(peer.agree, m.body);
+    return clear == null ? null : utf8.decode(clear);
+  }
+
+  /// Decrypt an encrypted group message with the group key, verifying the
+  /// sender's signature when we know their key. Returns null to drop.
+  Future<String?> _openGroupMessage(Envelope m) async {
+    final Channel? group = channelById(m.toId);
+    if (group == null || group.groupKey.isEmpty) return '🔒 Encrypted message';
+    final PeerKeys? sender = _peerKeys[m.fromId];
+    if (sender != null) {
+      final bool ok = await AppKeys.verifyB64(
+        _signedBytes(
+            id: m.id, from: m.fromId, to: m.toId, ts: m.ts, body: m.body),
+        m.sig,
+        sender.sign,
+      );
+      if (!ok) return null; // forged by someone whose key we hold
+    }
+    final List<int>? clear = await AppKeys.openSym(group.groupKey, m.body);
+    return clear == null ? null : utf8.decode(clear);
   }
 
   /// When the user opens a 1:1 conversation, send read receipts back to the

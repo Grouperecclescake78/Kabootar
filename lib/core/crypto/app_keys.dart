@@ -165,6 +165,40 @@ class AppKeys {
     );
     return _hkdf.deriveKey(secretKey: shared, info: _info);
   }
+
+  // --- Symmetric (group) encryption ----------------------------------------
+  //
+  // A private group shares one symmetric key K, handed to each member inside an
+  // encrypted invite. Messages are sealed with K so only members can read them;
+  // relays still see only ciphertext.
+
+  /// Mint a fresh 256-bit group key, base64url.
+  static Future<String> newGroupKey() async {
+    final SecretKey key = await _aead.newSecretKey();
+    return base64Url.encode(await key.extractBytes());
+  }
+
+  /// Encrypt [plaintext] with a base64url symmetric group key.
+  static Future<String> sealSym(String keyB64, List<int> plaintext) async {
+    final SecretKey key = SecretKey(base64Url.decode(keyB64));
+    final SecretBox box = await _aead.encrypt(plaintext, secretKey: key);
+    return base64Url.encode(box.concatenation());
+  }
+
+  /// Decrypt a base64url blob with a group key, or null if it fails.
+  static Future<List<int>?> openSym(String keyB64, String blobB64) async {
+    try {
+      final SecretKey key = SecretKey(base64Url.decode(keyB64));
+      final SecretBox box = SecretBox.fromConcatenation(
+        base64Url.decode(blobB64),
+        nonceLength: _aead.nonceLength,
+        macLength: _aead.macAlgorithm.macLength,
+      );
+      return await _aead.decrypt(box, secretKey: key);
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 /// A peer's two public keys, learned from their hello.

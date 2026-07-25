@@ -16,12 +16,16 @@ import 'dart:convert';
 ///   the message to remove; it is addressed to the original recipient (or the
 ///   channel) and floods the same way a message does. Any node holding that
 ///   message deletes it.
+/// * [invite] - a private-group invitation addressed to one recipient. Its
+///   body is sealed to that recipient (like an encrypted message) and carries
+///   the group id, name, symmetric key, and current roster.
 enum EnvelopeKind {
   hello,
   msg,
   ack,
   read,
-  retract;
+  retract,
+  invite;
 
   static EnvelopeKind fromWire(String value) {
     switch (value) {
@@ -35,6 +39,8 @@ enum EnvelopeKind {
         return EnvelopeKind.read;
       case 'retract':
         return EnvelopeKind.retract;
+      case 'invite':
+        return EnvelopeKind.invite;
       default:
         throw FormatException('Unknown envelope kind: $value');
     }
@@ -104,6 +110,7 @@ class Envelope {
   bool get isAck => kind == EnvelopeKind.ack;
   bool get isRead => kind == EnvelopeKind.read;
   bool get isRetract => kind == EnvelopeKind.retract;
+  bool get isInvite => kind == EnvelopeKind.invite;
 
   /// A copy of this envelope one hop older. Everything is preserved except a
   /// decremented [ttl] - the [id] in particular, so de-dup keeps working.

@@ -46,6 +46,22 @@ class ChannelsTab extends StatelessWidget {
     if (channel != null) onOpenChannel(channel);
   }
 
+  Future<void> _createPrivate(BuildContext context) async {
+    final String? name = await promptText(
+      context,
+      title: 'New private group',
+      hint: 'Group name (e.g. Study cell)',
+      message: 'Invite-only and end-to-end encrypted. Only members you invite '
+          'can read it. Add people after creating.',
+      confirmLabel: 'Create',
+      maxLength: 30,
+    );
+    if (name == null || name.trim().isEmpty || !context.mounted) return;
+    final Channel channel =
+        await context.read<ChatService>().createPrivateGroup(name);
+    onOpenChannel(channel);
+  }
+
   @override
   Widget build(BuildContext context) {
     final ChatService service = context.watch<ChatService>();
@@ -60,25 +76,39 @@ class ChannelsTab extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => _create(context),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create a channel'),
+                  onPressed: () => _createPrivate(context),
+                  icon: const Icon(Icons.lock_outline),
+                  label: const Text('New private group'),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                   ),
                 ),
               ),
               const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => _join(context),
-                  icon: const Icon(Icons.tag),
-                  label: const Text('Join with a code'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _create(context),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Channel'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _join(context),
+                      icon: const Icon(Icons.tag),
+                      label: const Text('Join code'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -98,12 +128,18 @@ class ChannelsTab extends StatelessWidget {
                   itemBuilder: (BuildContext context, int i) {
                     final Channel c = channels[i];
                     final Message? last = service.latestWith(c.id);
+                    final String subtitleWhenEmpty = c.isPrivate
+                        ? '${service.groupMembers(c.id).length} members · encrypted'
+                        : 'Code ${c.code}';
                     return ListTile(
                       onTap: () => onOpenChannel(c),
                       leading: CircleAvatar(
                         radius: 24,
                         backgroundColor: Theme.of(context).colorScheme.primary,
-                        child: const Icon(Icons.tag, color: Colors.white),
+                        child: Icon(
+                          c.isPrivate ? Icons.lock : Icons.tag,
+                          color: Colors.white,
+                        ),
                       ),
                       title: Text(
                         c.display,
@@ -111,7 +147,7 @@ class ChannelsTab extends StatelessWidget {
                       ),
                       subtitle: Text(
                         last == null
-                            ? 'Code ${c.code}'
+                            ? subtitleWhenEmpty
                             : '${last.senderId != null && last.senderId != service.identity.appId ? '${service.senderLabel(last.senderId!)}: ' : ''}${last.body}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

@@ -75,6 +75,20 @@ void main() {
       expect(await restored.open(bobPub.agree, blob), isNotNull);
     });
 
+    test('group key seals and opens for members, not outsiders', () async {
+      final String key = await AppKeys.newGroupKey();
+      final String blob =
+          await AppKeys.sealSym(key, utf8.encode('group secret'));
+
+      final List<int>? member = await AppKeys.openSym(key, blob);
+      expect(member, isNotNull);
+      expect(utf8.decode(member!), 'group secret');
+
+      // A different group key cannot open it.
+      final String otherKey = await AppKeys.newGroupKey();
+      expect(await AppKeys.openSym(otherKey, blob), isNull);
+    });
+
     test('safety code is stable and formatted', () async {
       final AppKeys a = await AppKeys.generate();
       final String code = await a.safetyCode();

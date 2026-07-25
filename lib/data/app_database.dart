@@ -12,7 +12,7 @@ class AppDatabase {
 
   final Database db;
 
-  static const int _schemaVersion = 5;
+  static const int _schemaVersion = 6;
 
   static Future<AppDatabase> open({String? path}) async {
     final String dbPath =
@@ -71,9 +71,25 @@ class AppDatabase {
   static Future<void> _createChannels(Database db) async {
     await db.execute('''
       CREATE TABLE channels (
-        id         TEXT PRIMARY KEY,
-        name       TEXT NOT NULL,
-        joined_at  INTEGER NOT NULL
+        id          TEXT PRIMARY KEY,
+        name        TEXT NOT NULL,
+        joined_at   INTEGER NOT NULL,
+        is_private  INTEGER NOT NULL DEFAULT 0,
+        group_key   TEXT NOT NULL DEFAULT ''
+      )
+    ''');
+    await _createGroupMembers(db);
+  }
+
+  /// The roster for private groups: who is a member, and their public keys.
+  static Future<void> _createGroupMembers(Database db) async {
+    await db.execute('''
+      CREATE TABLE group_members (
+        group_id    TEXT NOT NULL,
+        app_id      TEXT NOT NULL,
+        name        TEXT NOT NULL,
+        pub_bundle  TEXT NOT NULL DEFAULT '',
+        PRIMARY KEY (group_id, app_id)
       )
     ''');
   }
@@ -111,6 +127,16 @@ class AppDatabase {
       await db.execute(
         "ALTER TABLE contacts ADD COLUMN pub_bundle TEXT NOT NULL DEFAULT ''",
       );
+    }
+    // v5 -> v6: private groups (encrypted, invite-only) + their rosters.
+    if (from < 6) {
+      await db.execute(
+        'ALTER TABLE channels ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        "ALTER TABLE channels ADD COLUMN group_key TEXT NOT NULL DEFAULT ''",
+      );
+      await _createGroupMembers(db);
     }
   }
 
