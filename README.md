@@ -17,6 +17,10 @@ the recipient comes back in range. No servers, no accounts, no internet.
 
 ---
 
+> **Made in India 🇮🇳** — built by an Indian developer, open source, privacy-first.
+> No servers, no foreign backend, no account: your messages and identity never
+> leave your device.
+
 ## What it is
 
 studchat is a private 1:1 messenger built on a **delay-tolerant network (DTN)**.

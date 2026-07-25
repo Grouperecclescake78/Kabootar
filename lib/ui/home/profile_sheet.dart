@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/chat_service.dart';
 import '../widgets/avatar.dart';
+import '../widgets/made_in_india.dart';
 
 /// Bottom sheet showing this device's identity: display name (editable) and the
 /// stable app id that messages are addressed to.
@@ -135,6 +136,10 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           ),
           const SizedBox(height: 20),
           FilledButton(onPressed: _save, child: const Text('Save')),
+          const SizedBox(height: 20),
+          const Center(
+            child: MadeInIndia(caption: 'Made in India · Works offline'),
+          ),
         ],
       ),
     );

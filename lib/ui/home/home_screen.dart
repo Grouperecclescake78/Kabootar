@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/models/contact.dart';
 import '../../services/chat_service.dart';
 import '../chat/chat_screen.dart';
+import '../widgets/made_in_india.dart';
 import '../widgets/mesh_status_pill.dart';
 import 'chats_tab.dart';
 import 'mesh_tab.dart';
@@ -53,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'Profile',
           ),
         ],
+        bottom: const TricolorLine(),
       ),
       body: IndexedStack(
         index: _tab,
