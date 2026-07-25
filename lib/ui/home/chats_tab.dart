@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/contact.dart';
-import '../../core/models/message.dart';
 import '../../services/chat_service.dart';
-import '../format.dart';
-import '../widgets/avatar.dart';
 import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
-import '../widgets/status_ticks.dart';
+import 'archived_chats_screen.dart';
+import 'conversation_tile.dart';
 
 /// The conversation list - contacts you have exchanged messages with, newest
 /// activity first, with a one-line preview and unread-agnostic timestamp.
+/// Long-press a row to archive, hide, clear, block or delete it.
 class ChatsTab extends StatelessWidget {
   const ChatsTab({required this.onOpenChat, super.key});
 
@@ -22,8 +21,9 @@ class ChatsTab extends StatelessWidget {
     final ChatService service = context.watch<ChatService>();
 
     final List<Contact> withChats = service.conversationContacts();
+    final int archived = service.archivedCount;
 
-    if (withChats.isEmpty) {
+    if (withChats.isEmpty && archived == 0) {
       return const Column(
         children: <Widget>[
           DidYouKnowStrip(),
@@ -43,63 +43,48 @@ class ChatsTab extends StatelessWidget {
     return Column(
       children: <Widget>[
         const DidYouKnowStrip(),
+        if (archived > 0) _ArchivedBar(count: archived),
         Expanded(
           child: ListView.separated(
             itemCount: withChats.length,
             separatorBuilder: (_, __) => const Divider(indent: 80),
-            itemBuilder: (BuildContext context, int i) {
-              final Contact c = withChats[i];
-              final Message last = service.latestWith(c.appId)!;
-              final bool self = service.isSelf(c.appId);
-              return ListTile(
-                onTap: () => onOpenChat(c),
-                leading: Avatar(
-                  initials: c.initials,
-                  seed: c.appId,
-                  online: !self && service.isOnline(c.appId),
-                ),
-                title: Text(
-                  self ? '${c.name} (You)' : c.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Row(
-                  children: <Widget>[
-                    if (last.isOutgoing) ...<Widget>[
-                      StatusTicks(
-                        last.status,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                    Expanded(
-                      child: Text(
-                        last.body,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                trailing: Text(
-                  relativeTime(last.timestamp),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              );
-            },
+            itemBuilder: (BuildContext context, int i) =>
+                ConversationTile(contact: withChats[i], onOpen: onOpenChat),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _ArchivedBar extends StatelessWidget {
+  const _ArchivedBar({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color muted =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+    return Column(
+      children: <Widget>[
+        ListTile(
+          leading: Icon(Icons.archive_outlined, color: muted),
+          title: Text(
+            'Archived',
+            style: TextStyle(fontWeight: FontWeight.w600, color: muted),
+          ),
+          trailing: Text(
+            '$count',
+            style: TextStyle(color: muted, fontWeight: FontWeight.w600),
+          ),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ArchivedChatsScreen(),
+            ),
+          ),
+        ),
+        const Divider(height: 1),
       ],
     );
   }

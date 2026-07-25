@@ -127,8 +127,9 @@ class MeshEngine {
     _emit(MeshEventType.received, envelope);
 
     // An ack or read receipt - for anyone - means the message it references
-    // has arrived. Stop carrying that message; no point relaying what landed.
-    if (envelope.isAck || envelope.isRead) {
+    // has arrived. A retract means it should vanish. Either way, stop carrying
+    // the referenced message; no point relaying what landed or was deleted.
+    if (envelope.isAck || envelope.isRead || envelope.isRetract) {
       _clearCarried(envelope.body);
     }
 
@@ -137,12 +138,17 @@ class MeshEngine {
       return;
     }
 
-    // Channel (broadcast group) message addressed to a group we belong to:
+    // Channel (broadcast group) traffic addressed to a group we belong to:
     // deliver a copy to ourselves, then keep relaying so every other member
     // also receives it. Channels are best-effort, so no acks are emitted.
-    if (envelope.isMessage && groupIds.contains(envelope.toId)) {
-      await _delegate.onMessageDelivered(envelope);
-      _emit(MeshEventType.delivered, envelope);
+    if (groupIds.contains(envelope.toId)) {
+      if (envelope.isMessage) {
+        await _delegate.onMessageDelivered(envelope);
+        _emit(MeshEventType.delivered, envelope);
+      } else if (envelope.isRetract) {
+        await _delegate.onRetractReceived(envelope.body);
+        _emit(MeshEventType.delivered, envelope);
+      }
     }
 
     // Rules 5 & 6: addressed to someone else - relay if it still has hops.
@@ -160,6 +166,12 @@ class MeshEngine {
     if (envelope.isRead) {
       // A read receipt: the recipient opened the conversation and saw it.
       await _delegate.onReadReceived(envelope.body, envelope.ts);
+      _emit(MeshEventType.delivered, envelope);
+      return;
+    }
+    if (envelope.isRetract) {
+      // A delete-for-everyone for a message we hold. Remove it; do not ack.
+      await _delegate.onRetractReceived(envelope.body);
       _emit(MeshEventType.delivered, envelope);
       return;
     }
@@ -185,6 +197,28 @@ class MeshEngine {
       ttl: config.ttl,
     );
     await enqueueOutbound(read);
+  }
+
+  /// Retract a message we sent (delete-for-everyone). Addressed to the original
+  /// recipient (or the channel id), it floods like a message; every node that
+  /// holds a copy deletes it. Best-effort: a peer that never receives it keeps
+  /// its copy, so this is not a security guarantee.
+  Future<void> sendRetract({
+    required String toId,
+    required String messageId,
+  }) async {
+    // We are deleting our own copy too, so stop carrying/flooding the original.
+    _clearCarried(messageId);
+    final Envelope retract = Envelope(
+      id: _newId(),
+      kind: EnvelopeKind.retract,
+      fromId: myId,
+      toId: toId,
+      body: messageId,
+      ts: _clock(),
+      ttl: config.ttl,
+    );
+    await enqueueOutbound(retract);
   }
 
   /// Emit an end-to-end delivery receipt addressed back to the sender. The ack

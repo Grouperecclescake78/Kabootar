@@ -80,6 +80,12 @@ class CollectingDelegate implements MeshDelegate {
   Future<void> onReadReceived(String messageId, int ts) async =>
       read.add(messageId);
 
+  final List<String> retracted = <String>[];
+
+  @override
+  Future<void> onRetractReceived(String messageId) async =>
+      retracted.add(messageId);
+
   @override
   Future<void> onHelloReceived(String appId, String name) async =>
       contacts[appId] = name;
@@ -521,6 +527,36 @@ Future<void> scenarioReadReceipt() async {
   );
 }
 
+Future<void> scenarioRetract() async {
+  section('Retract (delete for everyone reaches the recipient via a relay)');
+  final Network net = Network();
+  net.add('A');
+  net.add('R');
+  net.add('B');
+  net.connect('A', 'R');
+  net.connect('R', 'B');
+
+  final Envelope sent = await net.nodes['A']!.engine.sendMessage(
+    toId: 'B',
+    body: 'delete me',
+  );
+  await net.pump();
+  check(
+      'B received the message', net.nodes['B']!.delegate.delivered.isNotEmpty);
+
+  // A deletes it for everyone; the retract floods to B through the relay.
+  await net.nodes['A']!.engine.sendRetract(toId: 'B', messageId: sent.id);
+  await net.pump();
+  check(
+    'B was told to delete the message',
+    net.nodes['B']!.delegate.retracted.contains(sent.id),
+  );
+  check(
+    'A stopped carrying the retracted message',
+    !net.nodes['A']!.engine.carried.any((Envelope e) => e.id == sent.id),
+  );
+}
+
 Future<void> main() async {
   print('studchat mesh engine - behavioural verification');
   await scenarioDirectDelivery();
@@ -534,6 +570,7 @@ Future<void> main() async {
   await scenarioHello();
   await scenarioChannels();
   await scenarioReadReceipt();
+  await scenarioRetract();
 
   print('\n── result');
   print('  $_passed passed, $_failed failed');

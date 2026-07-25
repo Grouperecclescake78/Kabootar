@@ -10,15 +10,25 @@ import 'status_ticks.dart';
 /// incoming bubble is labelled with [senderName].
 class MessageBubble extends StatelessWidget {
   const MessageBubble(this.message,
-      {this.senderName, this.onLongPress, super.key});
+      {this.senderName,
+      this.onLongPress,
+      this.onTap,
+      this.selected = false,
+      super.key});
 
   final Message message;
 
   /// Name of the sender, shown above an incoming channel bubble. Null in 1:1.
   final String? senderName;
 
-  /// Long-press handler (opens the message-info sheet).
+  /// Long-press handler (opens the message actions sheet / starts selection).
   final VoidCallback? onLongPress;
+
+  /// Tap handler - used to toggle selection while in multi-select mode.
+  final VoidCallback? onTap;
+
+  /// Whether this bubble is currently selected (multi-select mode).
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -31,73 +41,77 @@ class MessageBubble extends StatelessWidget {
         : (isDark ? AppColors.bubbleInDark : AppColors.bubbleInLight);
     final Color textColor = mine ? scheme.onPrimary : scheme.onSurface;
 
-    return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: GestureDetector(
-        onLongPress: onLongPress,
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.78,
-          ),
-          margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
-          padding: const EdgeInsets.fromLTRB(14, 9, 12, 8),
-          decoration: BoxDecoration(
-            color: bubbleColor,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(18),
-              topRight: const Radius.circular(18),
-              bottomLeft: Radius.circular(mine ? 18 : 5),
-              bottomRight: Radius.circular(mine ? 5 : 18),
+    return Container(
+      color: selected ? scheme.primary.withValues(alpha: 0.16) : null,
+      child: Align(
+        alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+        child: GestureDetector(
+          onLongPress: onLongPress,
+          onTap: onTap,
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.78,
             ),
-            boxShadow: mine
-                ? null
-                : <BoxShadow>[
-                    BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              if (!mine && senderName != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Text(
-                    senderName!,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: _nameColor(senderName!),
+            margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
+            padding: const EdgeInsets.fromLTRB(14, 9, 12, 8),
+            decoration: BoxDecoration(
+              color: bubbleColor,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(18),
+                topRight: const Radius.circular(18),
+                bottomLeft: Radius.circular(mine ? 18 : 5),
+                bottomRight: Radius.circular(mine ? 5 : 18),
+              ),
+              boxShadow: mine
+                  ? null
+                  : <BoxShadow>[
+                      BoxShadow(
+                        color:
+                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                if (!mine && senderName != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      senderName!,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: _nameColor(senderName!),
+                      ),
                     ),
                   ),
+                Text(
+                  message.body,
+                  style:
+                      TextStyle(color: textColor, fontSize: 15.5, height: 1.32),
                 ),
-              Text(
-                message.body,
-                style:
-                    TextStyle(color: textColor, fontSize: 15.5, height: 1.32),
-              ),
-              const SizedBox(height: 3),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    clockTime(message.timestamp),
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: textColor.withValues(alpha: 0.65),
+                const SizedBox(height: 3),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      clockTime(message.timestamp),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: textColor.withValues(alpha: 0.65),
+                      ),
                     ),
-                  ),
-                  if (mine) ...<Widget>[
-                    const SizedBox(width: 4),
-                    StatusTicks(message.status),
+                    if (mine) ...<Widget>[
+                      const SizedBox(width: 4),
+                      StatusTicks(message.status),
+                    ],
                   ],
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

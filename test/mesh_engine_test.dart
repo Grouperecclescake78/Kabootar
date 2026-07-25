@@ -270,7 +270,8 @@ void main() {
       final Node b = net.add('B');
       net.connect('A', 'B');
 
-      final Envelope sent = await a.engine.sendMessage(toId: 'B', body: 'seen?');
+      final Envelope sent =
+          await a.engine.sendMessage(toId: 'B', body: 'seen?');
       await net.pump();
       expect(a.delegate.acked, contains(sent.id)); // delivered
 
@@ -278,6 +279,63 @@ void main() {
       await b.engine.sendReadReceipt(toId: 'A', messageId: sent.id);
       await net.pump();
       expect(a.delegate.read, contains(sent.id));
+    });
+  });
+
+  group('MeshEngine - retract (delete for everyone)', () {
+    test('a retract reaches the recipient and names the deleted id', () async {
+      final MeshNetwork net = MeshNetwork();
+      final Node a = net.add('A');
+      final Node b = net.add('B');
+      net.connect('A', 'B');
+
+      final Envelope sent = await a.engine.sendMessage(toId: 'B', body: 'oops');
+      await net.pump();
+      expect(b.delegate.delivered.map((Envelope e) => e.id), contains(sent.id));
+
+      // A deletes it for everyone.
+      await a.engine.sendRetract(toId: 'B', messageId: sent.id);
+      await net.pump();
+      expect(b.delegate.retracted, contains(sent.id));
+    });
+
+    test('a retract propagates through an uninvolved relay', () async {
+      final MeshNetwork net = MeshNetwork();
+      final Node a = net.add('A');
+      final Node r = net.add('R');
+      final Node b = net.add('B');
+      net.connect('A', 'R');
+      net.connect('R', 'B');
+
+      final Envelope sent = await a.engine.sendMessage(toId: 'B', body: 'oops');
+      await net.pump();
+
+      await a.engine.sendRetract(toId: 'B', messageId: sent.id);
+      await net.pump();
+      expect(b.delegate.retracted, contains(sent.id));
+      // The relay never held it for itself, but it did forward the retract.
+      expect(r.delegate.retracted, isEmpty);
+      expect(r.delegate.count(MeshEventType.relayed), greaterThan(0));
+    });
+
+    test('every channel member receives a retract', () async {
+      final MeshNetwork net = MeshNetwork();
+      final Node a = net.add('A');
+      final Node r = net.add('R');
+      final Node b = net.add('B');
+      a.engine.groupIds.add('ch1');
+      b.engine.groupIds.add('ch1');
+      net.connect('A', 'R');
+      net.connect('R', 'B');
+
+      final Envelope sent =
+          await a.engine.sendMessage(toId: 'ch1', body: 'wrong channel');
+      await net.pump();
+
+      await a.engine.sendRetract(toId: 'ch1', messageId: sent.id);
+      await net.pump();
+      expect(b.delegate.retracted, contains(sent.id));
+      expect(r.delegate.retracted, isEmpty); // relay is not a member
     });
   });
 }

@@ -10,11 +10,18 @@ import 'dart:convert';
 /// * [ack]  - an end-to-end delivery receipt. Its [Envelope.body] carries the
 ///   id of the message being acknowledged; it is addressed back to the
 ///   original sender and flows through the mesh the same way a message does.
+/// * [read] - a read receipt, shaped like an [ack] (body is the read message
+///   id), flowing back to the original sender.
+/// * [retract] - a delete-for-everyone. Its [Envelope.body] carries the id of
+///   the message to remove; it is addressed to the original recipient (or the
+///   channel) and floods the same way a message does. Any node holding that
+///   message deletes it.
 enum EnvelopeKind {
   hello,
   msg,
   ack,
-  read;
+  read,
+  retract;
 
   static EnvelopeKind fromWire(String value) {
     switch (value) {
@@ -26,6 +33,8 @@ enum EnvelopeKind {
         return EnvelopeKind.ack;
       case 'read':
         return EnvelopeKind.read;
+      case 'retract':
+        return EnvelopeKind.retract;
       default:
         throw FormatException('Unknown envelope kind: $value');
     }
@@ -83,6 +92,7 @@ class Envelope {
   bool get isMessage => kind == EnvelopeKind.msg;
   bool get isAck => kind == EnvelopeKind.ack;
   bool get isRead => kind == EnvelopeKind.read;
+  bool get isRetract => kind == EnvelopeKind.retract;
 
   /// A copy of this envelope one hop older. Everything is preserved except a
   /// decremented [ttl] - the [id] in particular, so de-dup keeps working.

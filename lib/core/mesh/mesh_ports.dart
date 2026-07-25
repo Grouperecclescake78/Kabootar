@@ -50,6 +50,10 @@ abstract class MeshDelegate {
   /// opened the conversation and saw it. [receiptTs] is when they read it.
   Future<void> onReadReceived(String readMessageId, int receiptTs);
 
+  /// A delete-for-everyone reached us: the sender retracted [retractedMessageId]
+  /// and any copy we hold (delivered or still carried) must be removed.
+  Future<void> onRetractReceived(String retractedMessageId);
+
   /// We learned who is on the other end of a link (from a [hello]).
   Future<void> onHelloReceived(String appId, String displayName);
 

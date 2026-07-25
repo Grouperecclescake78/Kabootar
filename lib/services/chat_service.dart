@@ -14,6 +14,7 @@ import '../core/models/message.dart';
 import '../data/app_database.dart';
 import '../data/channel_repository.dart';
 import '../data/contact_repository.dart';
+import '../data/conv_meta_repository.dart';
 import '../data/identity_store.dart';
 import '../data/message_repository.dart';
 import '../data/sqlite_seen_store.dart';
@@ -43,6 +44,7 @@ class ChatService extends ChangeNotifier
     _messages = MessageRepository(database.db);
     _contacts = ContactRepository(database.db);
     _channels = ChannelRepository(database.db);
+    _convMeta = ConvMetaRepository(database.db);
     _seen = SqliteSeenStore(database.db);
     _engine = MeshEngine(
       myId: identity.appId,
@@ -66,8 +68,12 @@ class ChatService extends ChangeNotifier
   late final MessageRepository _messages;
   late final ContactRepository _contacts;
   late final ChannelRepository _channels;
+  late final ConvMetaRepository _convMeta;
   late final SqliteSeenStore _seen;
   late final MeshEngine _engine;
+
+  /// How long after sending a message "delete for everyone" stays offered.
+  static const int deleteForEveryoneWindowMs = 15 * 60 * 1000;
 
   Timer? _housekeeping;
 
@@ -85,6 +91,13 @@ class ChatService extends ChangeNotifier
   /// Incoming message ids we have already sent a read receipt for (in-memory;
   /// a resend after restart is harmless thanks to de-dup on the wire).
   final Set<String> _readReceiptSent = <String>{};
+
+  /// Conversation ids (peer app id or channel id) the user has tucked away.
+  /// Archived chats move to a separate section; hidden ones drop out of the
+  /// list until they see new activity; blocked ones stop receiving messages.
+  final Set<String> _archived = <String>{};
+  final Set<String> _hidden = <String>{};
+  final Set<String> _blocked = <String>{};
 
   List<Contact> get contacts => List<Contact>.unmodifiable(_contactList);
   List<Channel> get channels => List<Channel>.unmodifiable(_channelList);
@@ -108,8 +121,30 @@ class ChatService extends ChangeNotifier
 
   /// The 1:1 (and self) conversations to show in the Chats list, newest first.
   /// Driven by stored messages, so a conversation stays put even after the
-  /// other person disconnects or the app restarts.
-  List<Contact> conversationContacts() {
+  /// other person disconnects or the app restarts. Archived and hidden chats
+  /// are kept out - archived ones live in their own section.
+  List<Contact> conversationContacts() => _buildConversations()
+      .where((Contact c) => !_archived.contains(c.appId))
+      .where((Contact c) => !_hidden.contains(c.appId))
+      .toList();
+
+  /// The conversations the user has archived, newest first.
+  List<Contact> archivedConversations() => _buildConversations()
+      .where((Contact c) => _archived.contains(c.appId))
+      .toList();
+
+  int get archivedCount => _archived
+      .where((String id) => _latestPerPeer.containsKey(id))
+      .where((String id) => !_engine.groupIds.contains(id))
+      .length;
+
+  bool isArchived(String id) => _archived.contains(id);
+  bool isHidden(String id) => _hidden.contains(id);
+  bool isBlocked(String id) => _blocked.contains(id);
+
+  /// Every 1:1 (and self) conversation, newest first, before archive/hide
+  /// filtering is applied.
+  List<Contact> _buildConversations() {
     final List<Contact> out = <Contact>[];
     for (final MapEntry<String, Message> e in _latestPerPeer.entries) {
       final String id = e.key;
@@ -162,6 +197,9 @@ class ChatService extends ChangeNotifier
       ..addAll(await _channels.all());
     _engine.groupIds.addAll(_channelList.map((Channel c) => c.id));
     _latestPerPeer.addAll(await _messages.latestPerPeer());
+    _archived.addAll(await _convMeta.idsWith('archived'));
+    _hidden.addAll(await _convMeta.idsWith('hidden'));
+    _blocked.addAll(await _convMeta.idsWith('blocked'));
 
     await _transport.start(listener: this);
 
@@ -301,6 +339,92 @@ class ChatService extends ChangeNotifier
     return message;
   }
 
+  // --- Message & conversation management ------------------------------------
+
+  /// Whether "delete for everyone" should still be offered for [m]: it must be
+  /// our own outgoing message (not a self-note) and recently sent.
+  bool canDeleteForEveryone(Message m) =>
+      m.isOutgoing &&
+      !isSelf(m.peerId) &&
+      (_nowMs() - m.timestamp) <= deleteForEveryoneWindowMs;
+
+  /// Delete messages for this device only (single or multi-select).
+  Future<void> deleteMessages(Iterable<String> ids) async {
+    await _messages.deleteMany(ids);
+    await _reloadLatest();
+    notifyListeners();
+  }
+
+  /// Retract one of our own messages everywhere it reached (delete for
+  /// everyone): remove it locally and flood a retract so other nodes drop it
+  /// too. Best-effort - a peer that is out of range keeps its copy.
+  Future<void> deleteForEveryone(Message m) async {
+    await _messages.deleteById(m.id);
+    await _reloadLatest();
+    if (!isSelf(m.peerId)) {
+      await _engine.sendRetract(toId: m.peerId, messageId: m.id);
+    }
+    notifyListeners();
+  }
+
+  /// Empty a conversation's history, keeping the contact and any flags.
+  Future<void> clearChat(String convId) async {
+    await _messages.clearConversation(convId);
+    await _reloadLatest();
+    notifyListeners();
+  }
+
+  /// Remove a conversation entirely: its messages and its archive/hide/block
+  /// state. For a channel this also leaves the channel.
+  Future<void> deleteChat(String convId) async {
+    await _messages.clearConversation(convId);
+    await _convMeta.remove(convId);
+    _archived.remove(convId);
+    _hidden.remove(convId);
+    _blocked.remove(convId);
+    if (_engine.groupIds.contains(convId)) {
+      await leaveChannel(convId);
+    }
+    await _reloadLatest();
+    notifyListeners();
+  }
+
+  Future<void> archiveChat(String convId, {required bool archived}) async {
+    await _convMeta.setFlag(convId, 'archived', archived);
+    _toggle(_archived, convId, archived);
+    if (archived) _toggle(_hidden, convId, false); // archive supersedes hide
+    if (archived) await _convMeta.setFlag(convId, 'hidden', false);
+    notifyListeners();
+  }
+
+  Future<void> hideChat(String convId, {required bool hidden}) async {
+    await _convMeta.setFlag(convId, 'hidden', hidden);
+    _toggle(_hidden, convId, hidden);
+    notifyListeners();
+  }
+
+  /// Block a contact: stop accepting their incoming messages. The existing
+  /// chat stays so it can be unblocked.
+  Future<void> blockContact(String appId, {required bool blocked}) async {
+    await _convMeta.setFlag(appId, 'blocked', blocked);
+    _toggle(_blocked, appId, blocked);
+    notifyListeners();
+  }
+
+  static void _toggle(Set<String> set, String id, bool present) {
+    if (present) {
+      set.add(id);
+    } else {
+      set.remove(id);
+    }
+  }
+
+  Future<void> _reloadLatest() async {
+    _latestPerPeer
+      ..clear()
+      ..addAll(await _messages.latestPerPeer());
+  }
+
   // --- MeshOutbound ---------------------------------------------------------
 
   @override
@@ -321,6 +445,8 @@ class ChatService extends ChangeNotifier
     // A channel message belongs to the channel conversation and records who
     // sent it; a 1:1 message belongs to the sender's conversation.
     final String convId = isChannel ? message.toId : message.fromId;
+    // A blocked contact's messages are accepted by the mesh but never shown.
+    if (!isChannel && _blocked.contains(message.fromId)) return;
     final Message row = Message(
       id: message.id,
       peerId: convId,
@@ -334,6 +460,13 @@ class ChatService extends ChangeNotifier
     if (!isChannel) {
       await _contacts.touch(message.fromId, _nowMs());
       await _refreshContacts();
+    }
+    // New activity pulls an archived or hidden conversation back into the list.
+    if (_archived.remove(convId)) {
+      await _convMeta.setFlag(convId, 'archived', false);
+    }
+    if (_hidden.remove(convId)) {
+      await _convMeta.setFlag(convId, 'hidden', false);
     }
     _latestPerPeer[convId] = row;
     notifyListeners();
@@ -355,6 +488,14 @@ class ChatService extends ChangeNotifier
   Future<void> onReadReceived(String readMessageId, int receiptTs) async {
     await _messages.markRead(readMessageId, receiptTs);
     _bumpLatest(readMessageId, MessageStatus.read, readAt: receiptTs);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> onRetractReceived(String retractedMessageId) async {
+    // The sender deleted this for everyone: drop our copy wherever it lives.
+    await _messages.deleteById(retractedMessageId);
+    await _reloadLatest();
     notifyListeners();
   }
 

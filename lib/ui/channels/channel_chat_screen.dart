@@ -9,6 +9,7 @@ import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/made_in_india.dart';
 import '../widgets/message_bubble.dart';
+import '../chat/message_actions.dart';
 import '../chat/message_info_sheet.dart';
 import '../chat/composer.dart';
 
@@ -83,6 +84,70 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _onMessageLongPress(Message m) async {
+    final ChatService service = context.read<ChatService>();
+    final MessageAction? action = await showMessageActions(
+      context,
+      message: m,
+      canDeleteForEveryone: service.canDeleteForEveryone(m),
+      allowSelect: false,
+    );
+    if (!mounted) return;
+    switch (action) {
+      case MessageAction.copy:
+        Clipboard.setData(ClipboardData(text: m.body));
+        _snack('Copied');
+      case MessageAction.info:
+        await showMessageInfo(context, m);
+      case MessageAction.deleteForMe:
+        if (await _confirm('Delete message?',
+            'It will be removed from this device.', 'Delete')) {
+          await service.deleteMessages(<String>[m.id]);
+          await _reload();
+        }
+      case MessageAction.deleteForEveryone:
+        if (await _confirm(
+            'Delete for everyone?',
+            'It will be removed for you and, once they are in range, for '
+                'everyone in the channel.',
+            'Delete for everyone')) {
+          await service.deleteForEveryone(m);
+          await _reload();
+        }
+      case MessageAction.select:
+      case null:
+        break;
+    }
+  }
+
+  void _snack(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  Future<bool> _confirm(String title, String message, String action) async {
+    final bool? yes = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(action),
+          ),
+        ],
+      ),
+    );
+    return yes ?? false;
   }
 
   Future<void> _leave() async {
@@ -203,7 +268,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         senderName: m.isIncoming && m.senderId != null
                             ? service.senderLabel(m.senderId!)
                             : null,
-                        onLongPress: () => showMessageInfo(context, m),
+                        onLongPress: () => _onMessageLongPress(m),
                       );
                     },
                   ),
