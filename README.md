@@ -7,6 +7,7 @@
 Messages hop phone to phone over Bluetooth and Wi-Fi and are delivered whenever
 the recipient comes back in range. No servers, no accounts, no internet.
 
+[![CI](https://github.com/royalpinto007/studchat/actions/workflows/ci.yml/badge.svg)](https://github.com/royalpinto007/studchat/actions/workflows/ci.yml)
 [![engine](https://img.shields.io/badge/mesh_engine-24_invariants_green-2ea44f)](tool/engine_check.dart)
 [![Flutter](https://img.shields.io/badge/Flutter-3.22%2B-02569B?logo=flutter)](https://flutter.dev)
 [![platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-lightgrey)](docs/PLATFORM_SETUP.md)
