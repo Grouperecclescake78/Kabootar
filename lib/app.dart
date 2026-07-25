@@ -9,6 +9,7 @@ import 'data/identity_store.dart';
 import 'permissions.dart';
 import 'services/chat_service.dart';
 import 'theme/app_theme.dart';
+import 'theme/theme_controller.dart';
 import 'ui/about/civic_content.dart';
 import 'ui/home/home_screen.dart';
 import 'ui/onboarding/onboarding_screen.dart';
@@ -34,7 +35,8 @@ class _StudchatAppState extends State<StudchatApp> {
     final IdentityStore store = await IdentityStore.create();
     final AppDatabase db = await AppDatabase.open();
     final Identity identity = await store.loadOrCreate();
-    return _Boot(store, db, identity);
+    final ThemeController theme = await ThemeController.create();
+    return _Boot(store, db, identity, theme);
   }
 
   ChatService _makeService(_Boot boot) {
@@ -76,35 +78,49 @@ class _StudchatAppState extends State<StudchatApp> {
                 setState(() => _onboarded = true);
               },
             ),
+            boot.theme,
           );
         }
 
-        // Create the service once, and provide it ABOVE MaterialApp so pushed
-        // routes can access it too.
+        // Create the service once, and provide it (plus the theme controller)
+        // ABOVE MaterialApp so pushed routes can access them too.
         _service ??= _makeService(boot);
-        return ChangeNotifierProvider<ChatService>.value(
-          value: _service!,
-          child: _app(const HomeScreen()),
+        return MultiProvider(
+          providers: <ChangeNotifierProvider<ChangeNotifier>>[
+            ChangeNotifierProvider<ChatService>.value(value: _service!),
+            ChangeNotifierProvider<ThemeController>.value(value: boot.theme),
+          ],
+          child: _app(const HomeScreen(), boot.theme),
         );
       },
     );
   }
 
-  Widget _app(Widget home) => MaterialApp(
-        title: 'Studchat',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.system,
-        home: home,
-      );
+  /// Builds the [MaterialApp]. When a [ThemeController] is available it is
+  /// listened to, so switching light/dark re-themes the whole app live.
+  Widget _app(Widget home, [ThemeController? theme]) {
+    Widget material(BuildContext context) => MaterialApp(
+          title: 'Studchat',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: theme?.mode ?? ThemeMode.system,
+          home: home,
+        );
+    if (theme == null) return Builder(builder: material);
+    return ListenableBuilder(
+      listenable: theme,
+      builder: (BuildContext context, _) => material(context),
+    );
+  }
 }
 
 class _Boot {
-  _Boot(this.store, this.db, this.identity);
+  _Boot(this.store, this.db, this.identity, this.theme);
   final IdentityStore store;
   final AppDatabase db;
   Identity identity;
+  final ThemeController theme;
 }
 
 class _Splash extends StatelessWidget {

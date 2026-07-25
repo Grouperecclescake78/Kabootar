@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/chat_service.dart';
+import '../../theme/theme_controller.dart';
 import '../about/about_screen.dart';
 import '../widgets/avatar.dart';
 import '../widgets/chakra.dart';
@@ -54,6 +55,7 @@ class _ProfileSheetState extends State<_ProfileSheet> {
   @override
   Widget build(BuildContext context) {
     final ChatService service = context.watch<ChatService>();
+    final ThemeController theme = context.watch<ThemeController>();
     final String appId = service.identity.appId;
 
     return SingleChildScrollView(
@@ -143,7 +145,38 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           ),
           const SizedBox(height: 20),
           FilledButton(onPressed: _save, child: const Text('Save')),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
+          const Text(
+            'Appearance',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<ThemeMode>(
+              segments: const <ButtonSegment<ThemeMode>>[
+                ButtonSegment<ThemeMode>(
+                  value: ThemeMode.system,
+                  label: Text('System'),
+                  icon: Icon(Icons.brightness_auto_outlined),
+                ),
+                ButtonSegment<ThemeMode>(
+                  value: ThemeMode.light,
+                  label: Text('Light'),
+                  icon: Icon(Icons.light_mode_outlined),
+                ),
+                ButtonSegment<ThemeMode>(
+                  value: ThemeMode.dark,
+                  label: Text('Dark'),
+                  icon: Icon(Icons.dark_mode_outlined),
+                ),
+              ],
+              selected: <ThemeMode>{theme.mode},
+              showSelectedIcon: false,
+              onSelectionChanged: (Set<ThemeMode> s) => theme.setMode(s.first),
+            ),
+          ),
+          const SizedBox(height: 16),
           if (service.hiddenCount > 0) ...<Widget>[
             _SettingsTile(
               leading: const Icon(Icons.visibility_off_outlined),
