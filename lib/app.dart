@@ -13,6 +13,7 @@ import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 import 'ui/about/civic_content.dart';
+import 'ui/chat/emoji_picker.dart';
 import 'ui/home/home_screen.dart';
 import 'ui/onboarding/onboarding_screen.dart';
 import 'ui/widgets/chakra.dart';
@@ -47,6 +48,7 @@ class _StudchatAppState extends State<StudchatApp> with WidgetsBindingObserver {
     final ThemeController theme = await ThemeController.create();
     final NotificationService notifications = NotificationService();
     await notifications.init();
+    await seedDefaultRecentEmojis();
     return _Boot(store, db, identity, theme, notifications, keys);
   }
 
