@@ -1,0 +1,60 @@
+# Planning / internal docs — never published
+PLAN.md
+*.plan.md
+docs/internal/
+
+# Secrets & local config
+*.env
+.env*
+**/secrets.dart
+key.properties
+**/google-services.json
+**/GoogleService-Info.plist
+*.jks
+*.keystore
+
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+doc/api/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/**/gradle-wrapper.jar
+android/.settings/
+android/key.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/flutter_export_environment.sh
+**/Podfile.lock
+
+# macOS/Windows/Linux desktop build junk
+macos/Pods/
+linux/flutter/ephemeral/
+windows/flutter/ephemeral/
+
+# Coverage & logs
+coverage/
+*.log

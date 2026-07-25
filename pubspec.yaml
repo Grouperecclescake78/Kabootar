@@ -1,0 +1,45 @@
+name: studchat
+description: >-
+  An offline-first, serverless 1:1 messenger. Messages hop phone-to-phone over
+  Bluetooth/Wi-Fi and are delivered whenever the recipient comes back in range —
+  a delay-tolerant mesh with epidemic routing and end-to-end delivery acks.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Mesh transport: Google Nearby (Android) / Multipeer (iOS)
+  flutter_nearby_connections: ^1.1.2
+
+  # Local persistence
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  shared_preferences: ^2.3.2
+
+  # Identity & wire ids
+  uuid: ^4.5.1
+
+  # Runtime permissions (BLE / location on Android)
+  permission_handler: ^11.3.1
+
+  # Lightweight state management
+  provider: ^6.1.2
+
+  # Relative timestamps in the UI ("2m ago")
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
