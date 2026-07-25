@@ -7,8 +7,8 @@ class MeshConfig {
   const MeshConfig({
     this.ttl = 8,
     this.maxCacheSize = 500,
-    this.maxAgeMs = const Duration(hours: 24).inMilliseconds,
-    this.seenRetentionMs = const Duration(hours: 48).inMilliseconds,
+    this.maxAgeMs = 24 * 60 * 60 * 1000, // 24h
+    this.seenRetentionMs = 48 * 60 * 60 * 1000, // 48h
   });
 
   /// Hop budget stamped on a freshly-sent envelope. Each relay decrements it;
