@@ -41,6 +41,9 @@
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
 
+    <!-- Post local notifications for incoming messages (Android 13+). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:label="Studchat"
         android:name="${applicationName}"

@@ -8,6 +8,7 @@ import 'data/app_database.dart';
 import 'data/identity_store.dart';
 import 'permissions.dart';
 import 'services/chat_service.dart';
+import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 import 'ui/about/civic_content.dart';
@@ -26,17 +27,25 @@ class StudchatApp extends StatefulWidget {
   State<StudchatApp> createState() => _StudchatAppState();
 }
 
-class _StudchatAppState extends State<StudchatApp> {
+class _StudchatAppState extends State<StudchatApp> with WidgetsBindingObserver {
   late final Future<_Boot> _bootFuture = _load();
   ChatService? _service;
   bool _onboarded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   Future<_Boot> _load() async {
     final IdentityStore store = await IdentityStore.create();
     final AppDatabase db = await AppDatabase.open();
     final Identity identity = await store.loadOrCreate();
     final ThemeController theme = await ThemeController.create();
-    return _Boot(store, db, identity, theme);
+    final NotificationService notifications = NotificationService();
+    await notifications.init();
+    return _Boot(store, db, identity, theme, notifications);
   }
 
   ChatService _makeService(_Boot boot) {
@@ -44,17 +53,27 @@ class _StudchatAppState extends State<StudchatApp> {
       identity: boot.identity,
       database: boot.db,
       identityStore: boot.store,
+      notifications: boot.notifications,
     );
     // Start the mesh in the background so the UI appears instantly.
     unawaited(() async {
       await requestMeshPermissions();
+      await boot.notifications.requestPermission();
       await service.start();
     }());
     return service;
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Tell the service whether we are on-screen, so it knows when an incoming
+    // message should raise a notification rather than update silently.
+    _service?.appResumed = state == AppLifecycleState.resumed;
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _service?.dispose();
     super.dispose();
   }
@@ -116,11 +135,12 @@ class _StudchatAppState extends State<StudchatApp> {
 }
 
 class _Boot {
-  _Boot(this.store, this.db, this.identity, this.theme);
+  _Boot(this.store, this.db, this.identity, this.theme, this.notifications);
   final IdentityStore store;
   final AppDatabase db;
   Identity identity;
   final ThemeController theme;
+  final NotificationService notifications;
 }
 
 class _Splash extends StatelessWidget {

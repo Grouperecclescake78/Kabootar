@@ -30,16 +30,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final ScrollController _scroll = ScrollController();
   List<Message> _messages = <Message>[];
 
+  ChatService? _service;
+
   @override
   void initState() {
     super.initState();
-    context.read<ChatService>().addListener(_reload);
+    final ChatService service = context.read<ChatService>();
+    _service = service;
+    service.addListener(_reload);
+    service.openConversationId = widget.channel.id;
     _reload();
   }
 
   @override
   void dispose() {
-    context.read<ChatService>().removeListener(_reload);
+    final ChatService? service = _service;
+    if (service != null) {
+      service.removeListener(_reload);
+      if (service.openConversationId == widget.channel.id) {
+        service.openConversationId = null;
+      }
+    }
     _input.dispose();
     _scroll.dispose();
     super.dispose();

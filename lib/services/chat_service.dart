@@ -20,6 +20,7 @@ import '../data/message_repository.dart';
 import '../data/sqlite_seen_store.dart';
 import '../transport/mesh_transport.dart';
 import '../transport/nearby_transport.dart';
+import 'notification_service.dart';
 
 /// The application's single source of truth. It is the seam where the three
 /// layers meet: it *is* the mesh engine's [MeshDelegate] and [MeshOutbound],
@@ -32,9 +33,11 @@ class ChatService extends ChangeNotifier
     required AppDatabase database,
     required IdentityStore identityStore,
     MeshTransport? transport,
+    NotificationService? notifications,
     MeshConfig config = MeshConfig.defaults,
   })  : _db = database,
         _identityStore = identityStore,
+        _notifications = notifications,
         _config = config {
     _transport = transport ??
         NearbyTransport(
@@ -61,8 +64,16 @@ class ChatService extends ChangeNotifier
 
   final AppDatabase _db;
   final IdentityStore _identityStore;
+  final NotificationService? _notifications;
   final MeshConfig _config;
   static const Uuid _uuid = Uuid();
+
+  /// Whether the app is currently in the foreground, and which conversation (if
+  /// any) is open on screen. Together they decide when an incoming message
+  /// should raise a notification: we stay quiet only while the user is actually
+  /// looking at that conversation. Updated by the app shell and chat screens.
+  bool appResumed = true;
+  String? openConversationId;
 
   late final MeshTransport _transport;
   late final MessageRepository _messages;
@@ -482,7 +493,26 @@ class ChatService extends ChangeNotifier
       await _convMeta.setFlag(convId, 'hidden', false);
     }
     _latestPerPeer[convId] = row;
+    _maybeNotify(isChannel: isChannel, convId: convId, message: message);
     notifyListeners();
+  }
+
+  /// Raise a notification for an incoming message unless the user is already
+  /// looking at that conversation.
+  void _maybeNotify({
+    required bool isChannel,
+    required String convId,
+    required Envelope message,
+  }) {
+    final bool viewing = appResumed && openConversationId == convId;
+    if (viewing) return;
+    final String sender = senderLabel(message.fromId);
+    final String title =
+        isChannel ? (channelById(convId)?.display ?? 'Channel') : sender;
+    final String body = isChannel ? '$sender: ${message.body}' : message.body;
+    unawaited(
+      _notifications?.showMessage(title: title, body: body, threadKey: convId),
+    );
   }
 
   @override

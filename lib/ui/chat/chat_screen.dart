@@ -37,16 +37,28 @@ class _ChatScreenState extends State<ChatScreen> {
   final Set<String> _selected = <String>{};
   bool get _selecting => _selected.isNotEmpty;
 
+  ChatService? _service;
+
   @override
   void initState() {
     super.initState();
-    context.read<ChatService>().addListener(_reload);
+    final ChatService service = context.read<ChatService>();
+    _service = service;
+    service.addListener(_reload);
+    // Mark this conversation as on-screen so its messages don't notify.
+    service.openConversationId = widget.peer.appId;
     _reload();
   }
 
   @override
   void dispose() {
-    context.read<ChatService>().removeListener(_reload);
+    final ChatService? service = _service;
+    if (service != null) {
+      service.removeListener(_reload);
+      if (service.openConversationId == widget.peer.appId) {
+        service.openConversationId = null;
+      }
+    }
     _input.dispose();
     _scroll.dispose();
     super.dispose();

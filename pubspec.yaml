@@ -1,7 +1,7 @@
 name: studchat
 description: >-
   An offline-first, serverless 1:1 messenger. Messages hop phone-to-phone over
-  Bluetooth/Wi-Fi and are delivered whenever the recipient comes back in range —
+  Bluetooth/Wi-Fi and are delivered whenever the recipient comes back in range,
   a delay-tolerant mesh with epidemic routing and end-to-end delivery acks.
 publish_to: "none"
 version: 1.0.0+1
@@ -32,6 +32,9 @@ dependencies:
 
   # Lightweight state management
   provider: ^6.1.2
+
+  # Local notifications for incoming messages while backgrounded
+  flutter_local_notifications: ^18.0.1
 
   # Relative timestamps in the UI ("2m ago")
   intl: ^0.19.0

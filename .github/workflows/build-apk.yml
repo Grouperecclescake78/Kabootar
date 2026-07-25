@@ -37,6 +37,9 @@ jobs:
       - name: Patch the legacy mesh plugin for a modern toolchain
         run: bash tool/patch_nearby_plugin.sh
 
+      - name: Enable core-library desugaring (for local notifications)
+        run: bash tool/patch_gradle.sh
+
       - name: Build release APK
         run: flutter build apk --release
 
