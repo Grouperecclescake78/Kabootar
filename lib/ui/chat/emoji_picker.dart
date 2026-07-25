@@ -28,6 +28,13 @@ Future<void> showEmojiPicker(
             // what the platform font can render.
             checkPlatformCompatibility: false,
             emojiTextStyle: const TextStyle(fontFamily: 'Twemoji'),
+            // Gboard-style order: search on top, emoji grid in the middle, the
+            // category strip along the bottom (thumb-reachable).
+            viewOrderConfig: const ViewOrderConfig(
+              top: EmojiPickerItem.searchBar,
+              middle: EmojiPickerItem.emojiView,
+              bottom: EmojiPickerItem.categoryBar,
+            ),
             emojiViewConfig: EmojiViewConfig(
               columns: 8,
               emojiSizeMax: 28,

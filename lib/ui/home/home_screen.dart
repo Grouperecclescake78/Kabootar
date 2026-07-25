@@ -8,10 +8,10 @@ import '../channels/channel_chat_screen.dart';
 import '../channels/channels_tab.dart';
 import '../chat/chat_screen.dart';
 import '../chat/new_chat_screen.dart';
+import '../../theme/app_theme.dart';
 import '../widgets/avatar.dart';
 import '../widgets/chakra.dart';
 import '../widgets/made_in_india.dart';
-import '../widgets/mesh_status_pill.dart';
 import 'chats_tab.dart';
 import 'mesh_tab.dart';
 import 'people_tab.dart';
@@ -61,16 +61,26 @@ class _HomeScreenState extends State<HomeScreen> {
           children: <Widget>[
             const Chakra(size: 24),
             const SizedBox(width: 10),
-            Text(_titles[_tab]),
+            // The landing tab is branded 'Studchat'; the others keep their name.
+            Text(_tab == 0 ? 'Studchat' : _titles[_tab]),
           ],
         ),
         actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Center(
-              child: MeshStatusPill(
-                online: service.onlinePeerCount,
-                carrying: service.carriedForOthers,
+          IconButton(
+            tooltip: service.onlinePeerCount > 0
+                ? '${service.onlinePeerCount} nearby'
+                : 'No peers in range',
+            onPressed: () => setState(() => _tab = 3),
+            icon: Badge(
+              isLabelVisible: service.onlinePeerCount > 0,
+              label: Text('${service.onlinePeerCount}'),
+              child: Icon(
+                Icons.hub_outlined,
+                color: service.onlinePeerCount > 0
+                    ? AppColors.online
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.55),
               ),
             ),
           ),
