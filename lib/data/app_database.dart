@@ -12,7 +12,7 @@ class AppDatabase {
 
   final Database db;
 
-  static const int _schemaVersion = 3;
+  static const int _schemaVersion = 4;
 
   static Future<AppDatabase> open({String? path}) async {
     final String dbPath =
@@ -64,6 +64,7 @@ class AppDatabase {
     await db.execute('CREATE INDEX idx_seen_ts ON seen (ts)');
 
     await _createChannels(db);
+    await _createConvMeta(db);
   }
 
   static Future<void> _createChannels(Database db) async {
@@ -72,6 +73,19 @@ class AppDatabase {
         id         TEXT PRIMARY KEY,
         name       TEXT NOT NULL,
         joined_at  INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  /// Per-conversation flags (archived / hidden / blocked), keyed by the same id
+  /// a conversation uses (peer app id or channel id).
+  static Future<void> _createConvMeta(Database db) async {
+    await db.execute('''
+      CREATE TABLE conv_meta (
+        id        TEXT PRIMARY KEY,
+        archived  INTEGER NOT NULL DEFAULT 0,
+        hidden    INTEGER NOT NULL DEFAULT 0,
+        blocked   INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -86,6 +100,10 @@ class AppDatabase {
     if (from < 3) {
       await db.execute('ALTER TABLE messages ADD COLUMN delivered_at INTEGER');
       await db.execute('ALTER TABLE messages ADD COLUMN read_at INTEGER');
+    }
+    // v3 -> v4: per-conversation archive / hide / block state.
+    if (from < 4) {
+      await _createConvMeta(db);
     }
   }
 

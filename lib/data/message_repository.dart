@@ -88,6 +88,33 @@ class MessageRepository {
     };
   }
 
+  /// Delete a single message by id (delete-for-me, or the local half of a
+  /// delete-for-everyone). No-op if already gone.
+  Future<void> deleteById(String id) async {
+    await _db.delete('messages', where: 'id = ?', whereArgs: <Object?>[id]);
+  }
+
+  /// Delete several messages at once (multi-select delete).
+  Future<void> deleteMany(Iterable<String> ids) async {
+    final List<String> list = ids.toList();
+    if (list.isEmpty) return;
+    final String marks = List<String>.filled(list.length, '?').join(', ');
+    await _db.delete(
+      'messages',
+      where: 'id IN ($marks)',
+      whereArgs: list,
+    );
+  }
+
+  /// Wipe every message in one conversation (clear chat), keeping the contact.
+  Future<void> clearConversation(String peerId) async {
+    await _db.delete(
+      'messages',
+      where: 'peer_id = ?',
+      whereArgs: <Object?>[peerId],
+    );
+  }
+
   /// Outgoing messages still awaiting an ack - used to retry/re-flood on
   /// reconnect and to age failed sends.
   Future<List<Message>> undelivered() async {
