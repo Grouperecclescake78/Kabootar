@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/mesh/mesh_ports.dart';
 import '../../services/chat_service.dart';
 import '../../theme/app_theme.dart';
+import '../about/about_screen.dart';
 import '../format.dart';
 
 /// A window into the delay-tolerant network itself: how many peers are in
@@ -30,6 +31,10 @@ class MeshTab extends StatelessWidget {
                 color: service.onlinePeerCount > 0
                     ? AppColors.online
                     : Colors.grey,
+                info:
+                    'How many other Studchat phones are directly connected to '
+                    'you right now over Bluetooth / Wi-Fi. Messages hop between '
+                    'these devices - the more nearby, the faster things move.',
               ),
             ),
             const SizedBox(width: 12),
@@ -39,6 +44,12 @@ class MeshTab extends StatelessWidget {
                 value: '${service.carriedForOthers}',
                 label: 'Carrying for others',
                 color: AppColors.accent,
+                info:
+                    'Messages meant for other people that your phone is holding '
+                    'and will pass along when it meets the right device. This '
+                    'is how the mesh delivers to someone who is out of range: a '
+                    "stranger's phone carries your message until it arrives. "
+                    'Nothing here is readable by you; it is just relayed.',
               ),
             ),
           ],
@@ -83,7 +94,58 @@ class MeshTab extends StatelessWidget {
           )
         else
           ...service.activityLog.take(60).map((MeshEvent e) => _EventRow(e)),
+        const SizedBox(height: 24),
+        const _AboutLegalCard(),
       ],
+    );
+  }
+}
+
+/// Links to the civic + legal screen (Preamble, duties, privacy, terms).
+class _AboutLegalCard extends StatelessWidget {
+  const _AboutLegalCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: <Widget>[
+              Icon(Icons.shield_outlined, size: 20, color: scheme.primary),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Privacy, terms & about',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'How your data is handled, and the civic note',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, size: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -94,6 +156,7 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.label,
     required this.color,
+    required this.info,
   });
 
   final IconData icon;
@@ -101,38 +164,79 @@ class _StatCard extends StatelessWidget {
   final String label;
   final Color color;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
+  /// Plain-language explanation shown when the card is tapped.
+  final String info;
+
+  void _explain(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: Row(
+          children: <Widget>[
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 10),
+            Expanded(child: Text(label)),
+          ],
+        ),
+        content: Text(info, style: const TextStyle(height: 1.45)),
+        actions: <Widget>[
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Got it'),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () => _explain(context),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Icon(icon, color: color, size: 22),
+                const Spacer(),
+                Icon(
+                  Icons.info_outline,
+                  size: 15,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.35),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

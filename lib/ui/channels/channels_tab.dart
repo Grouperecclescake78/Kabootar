@@ -5,7 +5,6 @@ import '../../core/models/channel.dart';
 import '../../core/models/message.dart';
 import '../../services/chat_service.dart';
 import '../format.dart';
-import '../widgets/did_you_know.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/text_prompt.dart';
 
@@ -54,24 +53,31 @@ class ChannelsTab extends StatelessWidget {
 
     return Column(
       children: <Widget>[
-        const DidYouKnowStrip(),
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+          child: Column(
             children: <Widget>[
-              Expanded(
+              SizedBox(
+                width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: () => _create(context),
                   icon: const Icon(Icons.add),
-                  label: const Text('Create'),
+                  label: const Text('Create a channel'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () => _join(context),
                   icon: const Icon(Icons.tag),
-                  label: const Text('Join with code'),
+                  label: const Text('Join with a code'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                 ),
               ),
             ],

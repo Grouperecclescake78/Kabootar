@@ -88,23 +88,12 @@ class _ChatScreenState extends State<ChatScreen> {
         bottom: const TricolorLine(),
         title: Row(
           children: <Widget>[
-            if (self)
-              CircleAvatar(
-                radius: 19,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                child: const Icon(
-                  Icons.bookmark_outline,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              )
-            else
-              Avatar(
-                initials: widget.peer.initials,
-                seed: widget.peer.appId,
-                online: online,
-                radius: 19,
-              ),
+            Avatar(
+              initials: widget.peer.initials,
+              seed: widget.peer.appId,
+              online: online,
+              radius: 19,
+            ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

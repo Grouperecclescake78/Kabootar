@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'emoji_picker.dart';
+
 /// The message input bar, shared by 1:1 and channel chats. A rounded input pill
-/// with a send button that lights up when there is something to send.
+/// with an emoji button and a send button that lights up when there is
+/// something to send.
 class Composer extends StatefulWidget {
   const Composer({
     required this.controller,
@@ -73,11 +76,17 @@ class _ComposerState extends State<Composer> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.sentiment_satisfied_outlined,
-                      size: 22,
-                      color: scheme.onSurface.withValues(alpha: 0.45),
+                    IconButton(
+                      onPressed: () =>
+                          showEmojiPicker(context, widget.controller),
+                      icon: Icon(
+                        Icons.emoji_emotions_outlined,
+                        size: 23,
+                        color: scheme.onSurface.withValues(alpha: 0.55),
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      splashRadius: 22,
+                      tooltip: 'Emoji',
                     ),
                     Expanded(
                       child: TextField(
@@ -86,15 +95,21 @@ class _ComposerState extends State<Composer> {
                         maxLines: 5,
                         textCapitalization: TextCapitalization.sentences,
                         onSubmitted: (_) => widget.onSend(),
+                        style: const TextStyle(fontSize: 15.5, height: 1.3),
                         decoration: InputDecoration(
                           hintText: widget.hint,
+                          hintStyle: TextStyle(
+                            fontSize: 15.5,
+                            color: scheme.onSurface.withValues(alpha: 0.4),
+                          ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 12,
+                          contentPadding: const EdgeInsets.only(
+                            right: 12,
+                            top: 12,
+                            bottom: 12,
                           ),
                         ),
                       ),

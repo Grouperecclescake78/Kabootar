@@ -55,7 +55,7 @@ class _ProfileSheetState extends State<_ProfileSheet> {
     final ChatService service = context.watch<ChatService>();
     final String appId = service.identity.appId;
 
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,

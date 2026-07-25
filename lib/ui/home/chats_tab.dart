@@ -53,20 +53,11 @@ class ChatsTab extends StatelessWidget {
               final bool self = service.isSelf(c.appId);
               return ListTile(
                 onTap: () => onOpenChat(c),
-                leading: self
-                    ? CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        child: const Icon(
-                          Icons.bookmark_outline,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Avatar(
-                        initials: c.initials,
-                        seed: c.appId,
-                        online: service.isOnline(c.appId),
-                      ),
+                leading: Avatar(
+                  initials: c.initials,
+                  seed: c.appId,
+                  online: !self && service.isOnline(c.appId),
+                ),
                 title: Text(
                   self ? '${c.name} (You)' : c.name,
                   style: const TextStyle(fontWeight: FontWeight.w600),
