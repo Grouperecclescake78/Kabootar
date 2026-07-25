@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../core/crypto/app_keys.dart';
 import '../core/identity/identity.dart';
 import '../core/mesh/envelope.dart';
 import '../core/mesh/mesh_config.dart';
@@ -34,10 +36,12 @@ class ChatService extends ChangeNotifier
     required IdentityStore identityStore,
     MeshTransport? transport,
     NotificationService? notifications,
+    AppKeys? keys,
     MeshConfig config = MeshConfig.defaults,
   })  : _db = database,
         _identityStore = identityStore,
         _notifications = notifications,
+        _keys = keys,
         _config = config {
     _transport = transport ??
         NearbyTransport(
@@ -65,6 +69,14 @@ class ChatService extends ChangeNotifier
   final AppDatabase _db;
   final IdentityStore _identityStore;
   final NotificationService? _notifications;
+
+  /// This device's E2E key material (null disables encryption, e.g. in tests).
+  final AppKeys? _keys;
+
+  /// Peer app id -> their public keys, learned from hellos. When we hold a
+  /// peer's keys, 1:1 messages to and from them are encrypted and signed.
+  final Map<String, PeerKeys> _peerKeys = <String, PeerKeys>{};
+
   final MeshConfig _config;
   static const Uuid _uuid = Uuid();
 
@@ -216,6 +228,7 @@ class ChatService extends ChangeNotifier
     _contactList
       ..clear()
       ..addAll(await _contacts.all());
+    _loadPeerKeys();
     _channelList
       ..clear()
       ..addAll(await _channels.all());
@@ -228,9 +241,18 @@ class ChatService extends ChangeNotifier
     await _transport.start(listener: this);
 
     // Resume delivery of anything that was still in flight when we last closed:
-    // the in-memory carry-cache is gone, but the database remembers.
+    // the in-memory carry-cache is gone, but the database remembers. Rebuild
+    // each envelope through the same path as a fresh send, so an undelivered
+    // message to an encrypted peer is re-sealed rather than leaked as plaintext.
     for (final Message m in await _messages.undelivered()) {
-      await _engine.resumeOutbound(_toEnvelope(m));
+      await _engine.resumeOutbound(
+        await _buildOutgoing(
+          id: m.id,
+          toId: m.peerId,
+          plaintext: m.body,
+          ts: m.timestamp,
+        ),
+      );
     }
 
     _housekeeping = Timer.periodic(
@@ -346,21 +368,120 @@ class ChatService extends ChangeNotifier
       return note;
     }
 
-    final Envelope envelope = await _engine.sendMessage(toId: toId, body: body);
+    // Build the wire envelope (encrypted + signed when we hold the peer's
+    // keys) and inject it. We keep the plaintext locally for display; only the
+    // ciphertext ever crosses the mesh.
+    final String id = _uuid.v4();
+    final int ts = _nowMs();
+    final Envelope envelope = await _buildOutgoing(
+      id: id,
+      toId: toId,
+      plaintext: body,
+      ts: ts,
+    );
+    await _engine.enqueueOutbound(envelope);
     final Message message = Message(
-      id: envelope.id,
+      id: id,
       peerId: toId,
       body: body,
       direction: MessageDirection.outgoing,
       status: _connectedDevices.isEmpty
           ? MessageStatus.sending
           : MessageStatus.sent,
-      timestamp: envelope.ts,
+      timestamp: ts,
     );
     await _messages.upsert(message);
     _latestPerPeer[toId] = message;
     notifyListeners();
     return message;
+  }
+
+  /// Build a 1:1 outgoing message envelope. When we hold the recipient's keys
+  /// (and it is a real peer, not a channel or self), the body is sealed to
+  /// their X25519 key and signed with our Ed25519 key; otherwise it goes as
+  /// plaintext, exactly as before encryption existed.
+  Future<Envelope> _buildOutgoing({
+    required String id,
+    required String toId,
+    required String plaintext,
+    required int ts,
+  }) async {
+    final AppKeys? keys = _keys;
+    final PeerKeys? peer = _peerKeys[toId];
+    final bool encryptable = keys != null &&
+        peer != null &&
+        toId != identity.appId &&
+        !_engine.groupIds.contains(toId);
+    if (encryptable) {
+      final String blob = await keys.seal(peer.agree, utf8.encode(plaintext));
+      final String sig = await keys.signB64(
+        _signedBytes(
+            id: id, from: identity.appId, to: toId, ts: ts, body: blob),
+      );
+      return Envelope(
+        id: id,
+        kind: EnvelopeKind.msg,
+        fromId: identity.appId,
+        toId: toId,
+        body: blob,
+        ts: ts,
+        ttl: _config.ttl,
+        enc: true,
+        sig: sig,
+      );
+    }
+    return Envelope(
+      id: id,
+      kind: EnvelopeKind.msg,
+      fromId: identity.appId,
+      toId: toId,
+      body: plaintext,
+      ts: ts,
+      ttl: _config.ttl,
+    );
+  }
+
+  /// Canonical bytes an encrypted message's signature covers: the immutable
+  /// routing fields plus the ciphertext. TTL is excluded because relays change
+  /// it. Binding the ids and ciphertext stops tampering and impersonation.
+  List<int> _signedBytes({
+    required String id,
+    required String from,
+    required String to,
+    required int ts,
+    required String body,
+  }) =>
+      utf8.encode('$id|$from|$to|$ts|$body');
+
+  void _loadPeerKeys() {
+    _peerKeys.clear();
+    for (final Contact c in _contactList) {
+      final PeerKeys? pk = AppKeys.parseBundle(c.pubBundle);
+      if (pk != null) _peerKeys[c.appId] = pk;
+    }
+  }
+
+  /// Whether messages with [appId] are end-to-end encrypted (we hold their
+  /// keys). Drives the lock indicator in the chat UI.
+  bool isEncryptedWith(String appId) =>
+      _keys != null && appId != identity.appId && _peerKeys.containsKey(appId);
+
+  /// A shared safety code both people can compare out-of-band to confirm there
+  /// is no man-in-the-middle. Null until we have the peer's keys.
+  Future<String>? safetyCodeWith(String appId) {
+    final AppKeys? keys = _keys;
+    final Contact? c = _contactById(appId);
+    if (keys == null || c == null || c.pubBundle.isEmpty) return null;
+    final List<String> bundles = <String>[keys.publicBundle, c.pubBundle]
+      ..sort();
+    return AppKeys.fingerprint(bundles.join('|'));
+  }
+
+  Contact? _contactById(String appId) {
+    for (final Contact c in _contactList) {
+      if (c.appId == appId) return c;
+    }
+    return null;
   }
 
   // --- Message & conversation management ------------------------------------
@@ -471,10 +592,40 @@ class ChatService extends ChangeNotifier
     final String convId = isChannel ? message.toId : message.fromId;
     // A blocked contact's messages are accepted by the mesh but never shown.
     if (!isChannel && _blocked.contains(message.fromId)) return;
+
+    // Decrypt and authenticate an encrypted 1:1 message. If it fails to verify
+    // with a known key it is forged or tampered, so we drop it; if we simply do
+    // not have the sender's key yet, we store a visible placeholder so nothing
+    // silently disappears.
+    String bodyText = message.body;
+    if (message.enc && !isChannel) {
+      final AppKeys? keys = _keys;
+      final PeerKeys? peer = _peerKeys[message.fromId];
+      if (keys == null || peer == null) {
+        bodyText = '🔒 Encrypted message';
+      } else {
+        final bool ok = await AppKeys.verifyB64(
+          _signedBytes(
+            id: message.id,
+            from: message.fromId,
+            to: message.toId,
+            ts: message.ts,
+            body: message.body,
+          ),
+          message.sig,
+          peer.sign,
+        );
+        if (!ok) return; // forged / tampered
+        final List<int>? clear = await keys.open(peer.agree, message.body);
+        if (clear == null) return; // undecipherable
+        bodyText = utf8.decode(clear);
+      }
+    }
+
     final Message row = Message(
       id: message.id,
       peerId: convId,
-      body: message.body,
+      body: bodyText,
       direction: MessageDirection.incoming,
       status: MessageStatus.delivered,
       timestamp: message.ts,
@@ -493,25 +644,30 @@ class ChatService extends ChangeNotifier
       await _convMeta.setFlag(convId, 'hidden', false);
     }
     _latestPerPeer[convId] = row;
-    _maybeNotify(isChannel: isChannel, convId: convId, message: message);
+    _maybeNotify(
+      isChannel: isChannel,
+      convId: convId,
+      sender: senderLabel(message.fromId),
+      body: bodyText,
+    );
     notifyListeners();
   }
 
-  /// Raise a notification for an incoming message unless the user is already
-  /// looking at that conversation.
+  /// Raise a notification for an incoming message (already decrypted) unless the
+  /// user is currently looking at that conversation.
   void _maybeNotify({
     required bool isChannel,
     required String convId,
-    required Envelope message,
+    required String sender,
+    required String body,
   }) {
     final bool viewing = appResumed && openConversationId == convId;
     if (viewing) return;
-    final String sender = senderLabel(message.fromId);
     final String title =
         isChannel ? (channelById(convId)?.display ?? 'Channel') : sender;
-    final String body = isChannel ? '$sender: ${message.body}' : message.body;
+    final String text = isChannel ? '$sender: $body' : body;
     unawaited(
-      _notifications?.showMessage(title: title, body: body, threadKey: convId),
+      _notifications?.showMessage(title: title, body: text, threadKey: convId),
     );
   }
 
@@ -583,13 +739,20 @@ class ChatService extends ChangeNotifier
       };
 
   @override
-  Future<void> onHelloReceived(String appId, String displayName) async {
+  Future<void> onHelloReceived(
+    String appId,
+    String displayName,
+    String publicKeys,
+  ) async {
     if (appId == identity.appId) return;
     await _contacts.upsert(
       appId: appId,
       name: displayName.isEmpty ? 'Unknown' : displayName,
       lastSeen: _nowMs(),
+      pubBundle: publicKeys,
     );
+    final PeerKeys? pk = AppKeys.parseBundle(publicKeys);
+    if (pk != null) _peerKeys[appId] = pk;
     await _refreshContacts();
     notifyListeners();
   }
@@ -642,20 +805,12 @@ class ChatService extends ChangeNotifier
         kind: EnvelopeKind.hello,
         fromId: identity.appId,
         toId: '',
-        body: '',
+        // The hello body carries our public-key bundle so peers can encrypt
+        // to us. It is public material; sharing it is safe.
+        body: _keys?.publicBundle ?? '',
         ts: _nowMs(),
         ttl: 0,
         name: identity.name,
-      );
-
-  Envelope _toEnvelope(Message m) => Envelope(
-        id: m.id,
-        kind: EnvelopeKind.msg,
-        fromId: identity.appId,
-        toId: m.peerId,
-        body: m.body,
-        ts: m.timestamp,
-        ttl: _config.ttl,
       );
 
   Future<void> _refreshContacts() async {

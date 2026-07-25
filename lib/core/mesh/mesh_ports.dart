@@ -55,7 +55,13 @@ abstract class MeshDelegate {
   Future<void> onRetractReceived(String retractedMessageId);
 
   /// We learned who is on the other end of a link (from a [hello]).
-  Future<void> onHelloReceived(String appId, String displayName);
+  /// [publicKeys] is the peer's advertised key bundle (may be empty for a peer
+  /// that predates encryption).
+  Future<void> onHelloReceived(
+    String appId,
+    String displayName,
+    String publicKeys,
+  );
 
   /// A routing decision worth surfacing (relay, drop, cap hit, delivery).
   void onMeshEvent(MeshEvent event);

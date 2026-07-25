@@ -224,6 +224,59 @@ class _ChatScreenState extends State<ChatScreen> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _showSafetyCode() async {
+    final Future<String>? future =
+        context.read<ChatService>().safetyCodeWith(widget.peer.appId);
+    if (future == null) {
+      _snack('No encryption keys for this contact yet');
+      return;
+    }
+    final String code = await future;
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: const Row(
+          children: <Widget>[
+            Icon(Icons.verified_user_outlined, size: 20),
+            SizedBox(width: 8),
+            Text('Safety code'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Messages with ${widget.peer.name} are end-to-end encrypted. '
+              'Compare this code with them in person or over another channel - '
+              'if it matches on both phones, no one is in the middle.',
+              style: const TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: SelectableText(
+                code,
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _toggleBlock(bool blocked) async {
     final ChatService service = context.read<ChatService>();
     if (blocked) {
@@ -330,11 +383,15 @@ class _ChatScreenState extends State<ChatScreen> {
     required bool online,
     required bool blocked,
   }) {
+    final bool encrypted = !self && service.isEncryptedWith(widget.peer.appId);
     final String subtitle = self
         ? 'Message yourself · saved on this device'
         : blocked
             ? 'Blocked'
             : (online ? 'In range now' : 'Not in range');
+    final Color subtitleColor = online
+        ? AppColors.online
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
 
     return AppBar(
       titleSpacing: 0,
@@ -357,17 +414,18 @@ class _ChatScreenState extends State<ChatScreen> {
                 style:
                     const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: online
-                      ? AppColors.online
-                      : Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  if (encrypted) ...<Widget>[
+                    Icon(Icons.lock, size: 12, color: subtitleColor),
+                    const SizedBox(width: 3),
+                  ],
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12, color: subtitleColor),
+                  ),
+                ],
               ),
             ],
           ),
@@ -377,6 +435,8 @@ class _ChatScreenState extends State<ChatScreen> {
         PopupMenuButton<String>(
           onSelected: (String v) {
             switch (v) {
+              case 'safety':
+                _showSafetyCode();
               case 'clear':
                 _clearChat();
               case 'delete':
@@ -386,6 +446,11 @@ class _ChatScreenState extends State<ChatScreen> {
             }
           },
           itemBuilder: (BuildContext ctx) => <PopupMenuEntry<String>>[
+            if (encrypted)
+              const PopupMenuItem<String>(
+                value: 'safety',
+                child: _MenuRow(Icons.verified_user_outlined, 'Safety code'),
+              ),
             const PopupMenuItem<String>(
               value: 'clear',
               child: _MenuRow(Icons.cleaning_services_outlined, 'Clear chat'),

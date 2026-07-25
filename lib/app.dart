@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/crypto/app_keys.dart';
 import 'core/identity/identity.dart';
 import 'data/app_database.dart';
 import 'data/identity_store.dart';
@@ -42,10 +43,11 @@ class _StudchatAppState extends State<StudchatApp> with WidgetsBindingObserver {
     final IdentityStore store = await IdentityStore.create();
     final AppDatabase db = await AppDatabase.open();
     final Identity identity = await store.loadOrCreate();
+    final AppKeys keys = await store.loadOrCreateKeys();
     final ThemeController theme = await ThemeController.create();
     final NotificationService notifications = NotificationService();
     await notifications.init();
-    return _Boot(store, db, identity, theme, notifications);
+    return _Boot(store, db, identity, theme, notifications, keys);
   }
 
   ChatService _makeService(_Boot boot) {
@@ -54,6 +56,7 @@ class _StudchatAppState extends State<StudchatApp> with WidgetsBindingObserver {
       database: boot.db,
       identityStore: boot.store,
       notifications: boot.notifications,
+      keys: boot.keys,
     );
     // Start the mesh in the background so the UI appears instantly.
     unawaited(() async {
@@ -135,12 +138,20 @@ class _StudchatAppState extends State<StudchatApp> with WidgetsBindingObserver {
 }
 
 class _Boot {
-  _Boot(this.store, this.db, this.identity, this.theme, this.notifications);
+  _Boot(
+    this.store,
+    this.db,
+    this.identity,
+    this.theme,
+    this.notifications,
+    this.keys,
+  );
   final IdentityStore store;
   final AppDatabase db;
   Identity identity;
   final ThemeController theme;
   final NotificationService notifications;
+  final AppKeys keys;
 }
 
 class _Splash extends StatelessWidget {

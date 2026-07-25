@@ -12,7 +12,7 @@ class AppDatabase {
 
   final Database db;
 
-  static const int _schemaVersion = 4;
+  static const int _schemaVersion = 5;
 
   static Future<AppDatabase> open({String? path}) async {
     final String dbPath =
@@ -32,9 +32,10 @@ class AppDatabase {
   static Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE contacts (
-        app_id     TEXT PRIMARY KEY,
-        name       TEXT NOT NULL,
-        last_seen  INTEGER NOT NULL
+        app_id      TEXT PRIMARY KEY,
+        name        TEXT NOT NULL,
+        last_seen   INTEGER NOT NULL,
+        pub_bundle  TEXT NOT NULL DEFAULT ''
       )
     ''');
 
@@ -104,6 +105,12 @@ class AppDatabase {
     // v3 -> v4: per-conversation archive / hide / block state.
     if (from < 4) {
       await _createConvMeta(db);
+    }
+    // v4 -> v5: store each contact's public-key bundle for E2E encryption.
+    if (from < 5) {
+      await db.execute(
+        "ALTER TABLE contacts ADD COLUMN pub_bundle TEXT NOT NULL DEFAULT ''",
+      );
     }
   }
 

@@ -113,8 +113,13 @@ class MeshEngine {
     required String fromPeerId,
   }) async {
     // Rule 2: a hello is link-local. Learn from it, never de-dup or relay it.
+    // Its body carries the sender's public-key bundle for encryption.
     if (envelope.isHello) {
-      await _delegate.onHelloReceived(envelope.fromId, envelope.name);
+      await _delegate.onHelloReceived(
+        envelope.fromId,
+        envelope.name,
+        envelope.body,
+      );
       return;
     }
 

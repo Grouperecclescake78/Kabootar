@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../core/crypto/app_keys.dart';
 import '../core/identity/identity.dart';
 
 /// Reads and writes this device's persistent [Identity].
@@ -14,6 +15,7 @@ class IdentityStore {
 
   static const String _kAppId = 'studchat.appId';
   static const String _kName = 'studchat.name';
+  static const String _kKeys = 'studchat.keys';
   static const Uuid _uuid = Uuid();
 
   static Future<IdentityStore> create() async =>
@@ -35,5 +37,22 @@ class IdentityStore {
 
   Future<void> setName(String name) async {
     await _prefs.setString(_kName, name.trim());
+  }
+
+  /// Load this device's long-term encryption keys, minting and storing them on
+  /// first launch. The private seeds live in app-private storage; they never
+  /// leave the device.
+  Future<AppKeys> loadOrCreateKeys() async {
+    final String? stored = _prefs.getString(_kKeys);
+    if (stored != null && stored.isNotEmpty) {
+      try {
+        return await AppKeys.fromSeeds(stored);
+      } catch (_) {
+        // Corrupt/incompatible material: fall through and mint fresh keys.
+      }
+    }
+    final AppKeys keys = await AppKeys.generate();
+    await _prefs.setString(_kKeys, await keys.exportSeeds());
+    return keys;
   }
 }

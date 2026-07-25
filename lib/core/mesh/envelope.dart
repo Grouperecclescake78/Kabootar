@@ -60,6 +60,8 @@ class Envelope {
     required this.ts,
     required this.ttl,
     this.name = '',
+    this.enc = false,
+    this.sig = '',
   });
 
   /// Globally-unique id for this logical unit. The de-dup key. Stable across
@@ -85,8 +87,17 @@ class Envelope {
   /// dropped rather than forwarded. Bounds flood radius and storage.
   final int ttl;
 
-  /// Display name - only meaningful on a [hello].
+  /// Display name - only meaningful on a [hello]. On a hello it is also where
+  /// the sender's public-key bundle rides (via [body]).
   final String name;
+
+  /// Whether [body] is an encrypted, base64url sealed blob rather than
+  /// plaintext. Set on 1:1 messages once both devices have exchanged keys.
+  final bool enc;
+
+  /// Base64url Ed25519 signature over the message's immutable fields, present
+  /// on encrypted messages so the recipient can prove who sent it.
+  final String sig;
 
   bool get isHello => kind == EnvelopeKind.hello;
   bool get isMessage => kind == EnvelopeKind.msg;
@@ -105,6 +116,8 @@ class Envelope {
         ts: ts,
         ttl: ttl - 1,
         name: name,
+        enc: enc,
+        sig: sig,
       );
 
   Map<String, Object?> toJson() => <String, Object?>{
@@ -116,6 +129,8 @@ class Envelope {
         'ts': ts,
         'ttl': ttl,
         if (name.isNotEmpty) 'n': name,
+        if (enc) 'e2': 1,
+        if (sig.isNotEmpty) 'sg': sig,
       };
 
   static Envelope fromJson(Map<String, Object?> json) {
@@ -134,6 +149,8 @@ class Envelope {
       ts: (req('ts')! as num).toInt(),
       ttl: (req('ttl')! as num).toInt(),
       name: (json['n'] as String?) ?? '',
+      enc: (json['e2'] as num?)?.toInt() == 1,
+      sig: (json['sg'] as String?) ?? '',
     );
   }
 

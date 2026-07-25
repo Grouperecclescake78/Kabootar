@@ -68,6 +68,43 @@ void main() {
       expect(hopped, equals(e)); // equality is by id
     });
 
+    test('round-trips encryption flag + signature, and relaying keeps them',
+        () {
+      const Envelope enc = Envelope(
+        id: 'e1',
+        kind: EnvelopeKind.msg,
+        fromId: 'a',
+        toId: 'b',
+        body: 'BASE64CIPHERTEXT',
+        ts: 5,
+        ttl: 8,
+        enc: true,
+        sig: 'BASE64SIG',
+      );
+      final Envelope decoded = Envelope.decode(enc.encode());
+      expect(decoded.enc, isTrue);
+      expect(decoded.sig, 'BASE64SIG');
+      expect(decoded.body, 'BASE64CIPHERTEXT');
+      // A relay must carry the ciphertext + signature through unchanged.
+      final Envelope hopped = decoded.relayed();
+      expect(hopped.enc, isTrue);
+      expect(hopped.sig, 'BASE64SIG');
+
+      // A plaintext envelope omits the encryption keys for a compact wire form.
+      const Envelope plain = Envelope(
+        id: 'p1',
+        kind: EnvelopeKind.msg,
+        fromId: 'a',
+        toId: 'b',
+        body: 'hi',
+        ts: 1,
+        ttl: 4,
+      );
+      expect(plain.toJson().containsKey('e2'), isFalse);
+      expect(plain.toJson().containsKey('sg'), isFalse);
+      expect(Envelope.decode(plain.encode()).enc, isFalse);
+    });
+
     test('rejects malformed payloads with FormatException', () {
       expect(() => Envelope.decode('not json'), throwsFormatException);
       expect(() => Envelope.decode('[]'), throwsFormatException);

@@ -6,6 +6,7 @@ class Contact {
     required this.name,
     required this.lastSeen,
     this.online = false,
+    this.pubBundle = '',
   });
 
   /// The peer's stable app id. Primary key.
@@ -17,15 +18,26 @@ class Contact {
   /// Epoch milliseconds of the last time we saw them in range.
   final int lastSeen;
 
+  /// The peer's public-key bundle ("<ed>.<x>"), learned from their hello.
+  /// Empty for a peer met before encryption existed. Enables E2E encryption.
+  final String pubBundle;
+
   /// Whether this peer is connected right now. Not persisted - it is a live
   /// property of the current transport session, layered on at read time.
   final bool online;
 
-  Contact copyWith({String? name, int? lastSeen, bool? online}) => Contact(
+  Contact copyWith({
+    String? name,
+    int? lastSeen,
+    bool? online,
+    String? pubBundle,
+  }) =>
+      Contact(
         appId: appId,
         name: name ?? this.name,
         lastSeen: lastSeen ?? this.lastSeen,
         online: online ?? this.online,
+        pubBundle: pubBundle ?? this.pubBundle,
       );
 
   String get initials {
@@ -44,11 +56,13 @@ class Contact {
         'app_id': appId,
         'name': name,
         'last_seen': lastSeen,
+        'pub_bundle': pubBundle,
       };
 
   static Contact fromRow(Map<String, Object?> row) => Contact(
         appId: row['app_id']! as String,
         name: row['name']! as String,
         lastSeen: (row['last_seen']! as num).toInt(),
+        pubBundle: (row['pub_bundle'] as String?) ?? '',
       );
 }

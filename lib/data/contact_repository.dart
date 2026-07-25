@@ -14,13 +14,22 @@ class ContactRepository {
     required String appId,
     required String name,
     required int lastSeen,
+    String pubBundle = '',
   }) async {
+    // A hello without a key bundle (older peer) must not wipe a bundle we
+    // already learned, so fall back to the stored one when this one is empty.
+    String bundle = pubBundle;
+    if (bundle.isEmpty) {
+      final Contact? existing = await byId(appId);
+      bundle = existing?.pubBundle ?? '';
+    }
     await _db.insert(
         'contacts',
         <String, Object?>{
           'app_id': appId,
           'name': name,
           'last_seen': lastSeen,
+          'pub_bundle': bundle,
         },
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
