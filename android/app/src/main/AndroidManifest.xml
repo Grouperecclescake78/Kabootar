@@ -33,6 +33,14 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
+    <!-- Foreground service for the mesh. Android 14+ (API 34+) requires an
+         explicit service type or the process crashes with
+         MissingForegroundServiceTypeException. "connectedDevice" fits a
+         Bluetooth/Wi-Fi peer link. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+
     <application
         android:label="studchat"
         android:name="${applicationName}"
@@ -53,6 +61,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Merge the required foreground-service type onto the plugin's
+             NearbyService (declared without a type in its own manifest). -->
+        <service
+            android:name="com.nankai.flutter_nearby_connections.NearbyService"
+            android:foregroundServiceType="connectedDevice"
+            tools:node="merge" />
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
