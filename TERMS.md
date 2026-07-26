@@ -1,6 +1,6 @@
 # Terms of Use
 
-_Last updated: 2026-07-25_
+_Last updated: 2026-07-26_
 
 By using Kabootar you agree to the following.
 
@@ -11,8 +11,10 @@ By using Kabootar you agree to the following.
   carry your message. Kabootar does **not** guarantee that any message will be
   delivered, or delivered on time. **Do not rely on it for emergency or
   safety-critical communication.**
-- **Not encrypted in this version.** Do not send passwords, financial details,
-  or other sensitive information.
+- **Encryption and privacy.** Direct chats and private groups are end-to-end
+  encrypted; open channels are public by design. Keys are long-lived, so there is
+  no forward secrecy yet. Use your judgement before sending highly sensitive
+  information.
 - **Your content, your responsibility.** You are responsible for what you send.
   Do not use Kabootar to send unlawful, harassing, or harmful content, or to
   infringe anyone's rights.

@@ -269,8 +269,9 @@ works.
 > Lion Capital). See [DISCLAIMER.md](DISCLAIMER.md).
 
 **Legal:** [Privacy Policy](PRIVACY.md) · [Terms of Use](TERMS.md) ·
-[Disclaimer](DISCLAIMER.md). In v1, messages are **not** end-to-end encrypted,
-so please do not send sensitive information yet.
+[Disclaimer](DISCLAIMER.md). Direct chats and private groups are end-to-end
+encrypted; open channels are public by design and there is no forward secrecy
+yet, so use your judgement for highly sensitive information.
 
 ## 🤝 Contributing
 
