@@ -18,7 +18,7 @@ class NearbyTransport implements MeshTransport {
   final String deviceName;
 
   /// Bonjour/Nearby service type. Must be <= 15 chars, lowercase - this is the
-  /// "network id" that scopes the mesh to the studchat community.
+  /// "network id" that scopes the mesh to the Kabootar community.
   final String serviceType;
 
   final NearbyService _nearby = NearbyService();

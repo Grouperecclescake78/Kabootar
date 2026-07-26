@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// India's national tricolour. Non-partisan national-pride accent used to mark
-/// studchat as built in India: works with no internet, no foreign servers, and
+/// Kabootar as built in India: works with no internet, no foreign servers, and
 /// your data never leaves your device.
 abstract class Tiranga {
   static const Color saffron = Color(0xFFFF9933);

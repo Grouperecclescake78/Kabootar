@@ -4,7 +4,7 @@ import 'envelope.dart';
 import 'mesh_config.dart';
 import 'mesh_ports.dart';
 
-/// The store-and-forward heart of studchat: a delay-tolerant network using
+/// The store-and-forward heart of Kabootar: a delay-tolerant network using
 /// epidemic routing with end-to-end acknowledgements.
 ///
 /// It is deliberately framework-free - no Flutter, no transport plugin, no

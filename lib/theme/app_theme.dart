@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// studchat's visual identity - an "off-grid signal" palette: a confident
+/// Kabootar's visual identity - an "off-grid signal" palette: a confident
 /// indigo for chrome and self bubbles, a warm amber accent for the offline /
 /// carrying states that make this app what it is.
 abstract class AppColors {
