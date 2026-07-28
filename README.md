@@ -217,7 +217,7 @@ dart run tool/engine_check.dart
   ✓ C finally received it after coming back in range
   ✓ A eventually learns it was delivered
   ...
-  24 passed, 0 failed — all mesh-engine invariants hold ✓
+  32 passed, 0 failed — all mesh-engine invariants hold ✓
 ```
 
 </details>

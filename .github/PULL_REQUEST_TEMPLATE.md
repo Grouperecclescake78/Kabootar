@@ -18,7 +18,7 @@ Closes #
 
 - [ ] Mesh routing changes keep `lib/core/mesh` free of Flutter / plugin / DB imports
 - [ ] Added or updated tests (`tool/engine_check.dart` and/or `test/`)
-- [ ] `dart run tool/engine_check.dart` passes (24 invariants)
+- [ ] `dart run tool/engine_check.dart` passes (32 invariants)
 - [ ] `flutter analyze` is clean and `flutter test` passes
 - [ ] Prose uses plain hyphens (no em-dashes)
 

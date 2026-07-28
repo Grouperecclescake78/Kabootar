@@ -16,7 +16,7 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
-      - name: Verify mesh routing (24 invariants, dependency-free)
+      - name: Verify mesh routing (32 invariants, dependency-free)
         # Run from a pubspec-free copy so the Flutter pubspec does not trigger
         # package resolution; the harness uses only relative imports + dart:core.
         run: |

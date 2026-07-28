@@ -18,7 +18,7 @@ changes is that they keep the layering clean and the mesh engine provable.
 No device needed to validate the core:
 
 ```bash
-dart run tool/engine_check.dart     # 24 routing invariants, plain Dart
+dart run tool/engine_check.dart     # 32 routing invariants, plain Dart
 ```
 
 With Flutter installed:

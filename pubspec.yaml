@@ -1,6 +1,7 @@
 name: kabootar
 description: >-
-  An offline-first, serverless 1:1 messenger. Messages hop phone-to-phone over
+  An offline-first, serverless mesh messenger with end-to-end encrypted 1:1
+  chats, private groups, channels, and media. Messages hop phone-to-phone over
   Bluetooth/Wi-Fi and are delivered whenever the recipient comes back in range,
   a delay-tolerant mesh with epidemic routing and end-to-end delivery acks.
 publish_to: "none"

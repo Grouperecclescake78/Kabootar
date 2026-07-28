@@ -19,14 +19,16 @@ guarantee:
 | --- | --- |
 | No servers / no cloud account | ✅ Yes, by design |
 | Data stays on device | ✅ Identity, contacts, and history are local (SQLite / prefs) |
-| End-to-end encryption | ❌ **Not yet.** Messages are plaintext on the wire |
-| Sender authenticity | ❌ App ids are self-asserted; no signing yet |
+| End-to-end encryption | ✅ 1:1 chats and private groups (X25519 + AES-GCM). Open channels are public by design |
+| Sender authenticity | ✅ Messages are Ed25519-signed; a per-chat safety code lets you verify keys in person |
+| Forward secrecy | ❌ **Not yet.** Keys are long-lived, so a future ratchet is planned |
 | Metadata privacy | ⚠️ Nearby peers can observe that traffic is flowing |
 
-Because messages are **plaintext in v1**, treat the current release as suitable
-for casual and hobby use, not for sensitive communication. End-to-end
-encryption (per-contact keys) and message signing are on the
-[roadmap](README.md#roadmap) and are the top security priorities.
+Direct chats and private groups are end-to-end encrypted and signed; keys are
+generated on the device and never leave it. Open channels are public broadcasts
+by design. The main remaining caveat is **no forward secrecy yet** (static
+keys), so for highly sensitive communication keep that limitation in mind. A
+message ratchet is the top security item on the [roadmap](README.md#-roadmap).
 
 ## Supported versions
 
