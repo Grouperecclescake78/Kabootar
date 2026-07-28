@@ -13,7 +13,7 @@
 Messages hop **phone-to-phone over Bluetooth and Wi-Fi** and are delivered
 whenever the other person comes back in range. An offline, serverless mesh
 messenger built on a delay-tolerant network with epidemic routing, **end-to-end
-encryption**, private groups, and image sharing.
+encryption**, private groups, and image and file sharing.
 
 <br/>
 
@@ -51,7 +51,7 @@ you to the recipient, even if that is minutes later after you have both walked
 away.
 
 It feels like a normal chat app, a contact list, saved history, sent/delivered
-receipts, end-to-end encrypted 1:1 chats and private groups, image sharing, but
+receipts, end-to-end encrypted 1:1 chats and private groups, image and file sharing, but
 the transport underneath is a **store-and-forward mesh** rather than the cloud.
 
 |  | Kabootar | Normal messenger |
@@ -69,7 +69,8 @@ the transport underneath is a **store-and-forward mesh** rather than the cloud.
 - 🔐 **End-to-end encrypted** — X25519 + Ed25519 + AES-GCM, with signed messages
   and a safety code to verify a contact. Relays only ever see ciphertext.
 - 👥 **Private groups** — invite-only, encrypted with a shared group key.
-- 🖼️ **Image sharing** — photos compressed, chunked, and carried like text.
+- 🖼️ **Image & file sharing** — photos are compressed and thumbnailed; any file
+  (up to 8 MB) is chunked and carried across the mesh just like text.
 - 🔔 **Notifications** — local alerts when a message arrives (no push server).
 - 🌗 **Light / dark theme**, archive / hide / block, delete-for-everyone,
   mark-as-unread — the everyday chat controls.
@@ -244,8 +245,8 @@ Designed in up front, so nothing surprises you:
 - [x] 🔐 End-to-end encryption (X25519 + Ed25519 + AES-GCM) + message signing
 - [x] 👥 Private groups with membership (encrypted, invite-only)
 - [x] 🖼 Image sharing (compressed, chunked, carried like text)
+- [x] 📎 Arbitrary file sharing over the same chunk path
 - [x] 🔔 Local notifications, 🌗 theme, and full chat management
-- [ ] 📎 Arbitrary file sharing over the same chunk path
 - [ ] 🔒 Forward secrecy (a message ratchet on top of the static keys)
 - [ ] 🔋 Battery duty-cycling
 - [ ] 🌉 Online bridge: any node with internet relays onward
