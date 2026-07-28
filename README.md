@@ -174,15 +174,18 @@ flowchart TD
 
 ```bash
 git clone https://github.com/royalpinto007/Kabootar.git
-cd kabootar
+cd Kabootar
 
-flutter create . --platforms=android,ios --org dev.kabootar  # native shell
+# The Android native shell is committed, so no `flutter create` is needed.
 flutter pub get
+dart run flutter_launcher_icons    # launcher icon
 bash tool/patch_nearby_plugin.sh   # modernise the 2021-era mesh plugin
-flutter run                        # on a connected device
+bash tool/patch_gradle.sh          # core-library desugaring (notifications)
+flutter run                        # on a connected Android device
 ```
 
-Full platform notes (permissions, minimum SDKs) are in
+iOS needs a one-time `flutter create . --platforms=ios --org dev.studchat` to
+generate its Xcode shell. Full platform notes (permissions, minimum SDKs) are in
 [`docs/PLATFORM_SETUP.md`](docs/PLATFORM_SETUP.md).
 
 </details>
@@ -192,10 +195,11 @@ Full platform notes (permissions, minimum SDKs) are in
 
 <br/>
 
-Every push builds an installable APK. Download the latest from the
-[**Build APK** workflow](https://github.com/royalpinto007/Kabootar/actions/workflows/build-apk.yml)
-(open the newest run → **Artifacts** → `kabootar-apk`), or from
-[Releases](https://github.com/royalpinto007/Kabootar/releases) once tagged.
+Grab a signed-per-ABI APK from
+[Releases](https://github.com/royalpinto007/Kabootar/releases) (pick
+`kabootar-vX.Y.Z-arm64-v8a.apk` for most phones). Every push also builds one via
+the [**Build APK** workflow](https://github.com/royalpinto007/Kabootar/actions/workflows/build-apk.yml)
+(open the newest run → **Artifacts** → `kabootar-apks`).
 
 </details>
 
